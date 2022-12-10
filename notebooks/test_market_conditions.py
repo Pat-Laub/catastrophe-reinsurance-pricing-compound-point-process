@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.14.2
 #   kernelspec:
-#     display_name: Python [conda env:.conda-catbond]
+#     display_name: catbond
 #     language: python
-#     name: conda-env-.conda-catbond-py
+#     name: python3
 # ---
 
 # +
@@ -21,7 +21,7 @@ module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from main import *
+from market_conditions import *
 import matplotlib.pyplot as plt
 
 # +
