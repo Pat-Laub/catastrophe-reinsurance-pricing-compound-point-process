@@ -17,7 +17,8 @@
 # Add the parent directory to the path so that we can import the modules.
 import os
 import sys
-module_path = os.path.abspath(os.path.join('..'))
+
+module_path = os.path.abspath(os.path.join(".."))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
@@ -35,6 +36,7 @@ def simulate_poisson(rg):
     lambda_ = 0.5
     return rg.poisson(lambda_ * maturity)
 
+
 rg = np.random.default_rng(123)
 N_T = [simulate_poisson(rg) for _ in range(R)]
 np.mean(N_T), np.var(N_T)
@@ -51,9 +53,10 @@ def simulate_cox(rg):
     selfJumpSizeDist = lambda rg: 0
     extJumpSizeDist = lambda rg: rg.uniform(0, 0.5)
 
-    return simulate_num_dynamic_contagion(rg, maturity,
-        lambda0, a, rho, delta,
-        selfJumpSizeDist, extJumpSizeDist)
+    return simulate_num_dynamic_contagion(
+        rg, maturity, lambda0, a, rho, delta, selfJumpSizeDist, extJumpSizeDist
+    )
+
 
 rg = np.random.default_rng(123)
 N_T = [simulate_cox(rg) for _ in range(R)]
@@ -71,9 +74,10 @@ def simulate_hawkes(rg):
     selfJumpSizeDist = lambda rg: rg.uniform()
     extJumpSizeDist = lambda rg: 0
 
-    return simulate_num_dynamic_contagion(rg, maturity,
-        lambda0, a, rho, delta,
-        selfJumpSizeDist, extJumpSizeDist)
+    return simulate_num_dynamic_contagion(
+        rg, maturity, lambda0, a, rho, delta, selfJumpSizeDist, extJumpSizeDist
+    )
+
 
 rg = np.random.default_rng(123)
 N_T = [simulate_hawkes(rg) for _ in range(R)]
@@ -91,9 +95,10 @@ def simulate_dcp(rg):
     selfJumpSizeDist = lambda rg: rg.uniform()
     extJumpSizeDist = lambda rg: rg.uniform(0, 0.5)
 
-    return simulate_num_dynamic_contagion(rg, maturity,
-        lambda0, a, rho, delta,
-        selfJumpSizeDist, extJumpSizeDist)
+    return simulate_num_dynamic_contagion(
+        rg, maturity, lambda0, a, rho, delta, selfJumpSizeDist, extJumpSizeDist
+    )
+
 
 rg = np.random.default_rng(123)
 N_T = [simulate_dcp(rg) for _ in range(R)]

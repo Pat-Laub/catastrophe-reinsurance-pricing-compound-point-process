@@ -17,7 +17,8 @@
 # Add the parent directory to the path so that we can import the modules.
 import os
 import sys
-module_path = os.path.abspath(os.path.join('..'))
+
+module_path = os.path.abspath(os.path.join(".."))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
@@ -49,9 +50,22 @@ upsilon = 0.1
 lambda_r = -0.01
 
 # +
-all_time_series = get_market_conditions(R=R, seed=seed, maturity=maturity, kappa=kappa,
-        lambda_r=lambda_r, m=m, phi_V=phi_V, sigma_V=sigma_V, phi_L=phi_L, sigma_L=sigma_L,
-        upsilon=upsilon, V_0=V_0, L_0=L_0, r_0=r_0)
+all_time_series = get_market_conditions(
+    R=R,
+    seed=seed,
+    maturity=maturity,
+    kappa=kappa,
+    lambda_r=lambda_r,
+    m=m,
+    phi_V=phi_V,
+    sigma_V=sigma_V,
+    phi_L=phi_L,
+    sigma_L=sigma_L,
+    upsilon=upsilon,
+    V_0=V_0,
+    L_0=L_0,
+    r_0=r_0,
+)
 
 V_T, L_T, int_r_t = summarise_market_conditions(all_time_series, maturity)
 
@@ -69,4 +83,3 @@ plt.hist(int_r_t, 30, label="Interest rates (integrated)")
 plt.axvline(r_0, c="r", ls="--")
 plt.legend()
 plt.show()
-
