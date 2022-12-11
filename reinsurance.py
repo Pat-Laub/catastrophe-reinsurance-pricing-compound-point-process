@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
-from typing import Callable
+from typing import Callable, Tuple
 
 
 def payout_with_default(
@@ -47,7 +47,7 @@ def simulate_catastrophe_losses(
     simulate_num_catastrophes: Callable[[np.random.Generator], int],
     mu_C: float,
     sigma_C: float,
-) -> np.array:
+) -> Tuple[np.ndarray, np.ndarray]:
     """Simulate the losses incurred by natural catastrophes.
 
     Args:
@@ -61,7 +61,7 @@ def simulate_catastrophe_losses(
         A numpy array containing the losses incurred by natural catastrophes.
     """
     num_catastrophes = np.empty(R, dtype=int)
-    C_T = np.empty(R)
+    C_T = np.empty(R, dtype=float)
 
     for i in tqdm(range(R)):
         num_catastrophes[i] = simulate_num_catastrophes(rg)
@@ -76,7 +76,7 @@ def calculate_prices(
     int_r_t: np.ndarray,
     C_T: np.ndarray,
     markup: float,
-) -> np.ndarray:
+) -> pd.DataFrame:
     """Calculate prices for reinsurance contracts at various attachment and cap levels.
 
     Args:

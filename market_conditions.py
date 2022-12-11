@@ -62,8 +62,6 @@ def simulate_market_conditions(
     x0 = np.array([V_0, L_0, r_0])
     tspan = np.linspace(0.0, maturity, 156)
 
-    rg = rnd.default_rng(seed)
-
     # Container for all the simulated market conditions
     all_time_series = np.empty((R, len(tspan), 3), dtype=float)
 
@@ -81,6 +79,8 @@ def simulate_market_conditions(
         return time_series
 
     delayed_simulate = delayed(simulate)
+
+    rg = rnd.default_rng(seed)
 
     all_time_series = np.array(
         Parallel(n_jobs=-1)(

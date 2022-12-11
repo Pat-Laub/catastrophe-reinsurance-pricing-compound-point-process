@@ -9,8 +9,8 @@ def simulate_num_dynamic_contagion(
     a: float,
     rho: float,
     delta: float,
-    selfJumpSizeDist: Callable[[np.random.Generator], float],
-    extJumpSizeDist: Callable[[np.random.Generator], float],
+    selfJumpSizeDist: Callable[[Type[np.random.Generator]], float],
+    extJumpSizeDist: Callable[[Type[np.random.Generator]], float],
 ) -> int:
     """Simulate a dynamic contagion process and return the number of arrivals.
 
@@ -29,7 +29,7 @@ def simulate_num_dynamic_contagion(
     """
 
     # Step 1: Set initial conditions
-    prevTime = 0
+    prevTime = 0.0
     intensity = lambda0
 
     count = 0
