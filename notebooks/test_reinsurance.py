@@ -13,6 +13,8 @@
 # ---
 
 # +
+# %config InlineBackend.figure_format='retina'
+
 # Add the parent directory to the path so that we can import the modules.
 import os
 import sys
@@ -211,9 +213,7 @@ def plot_num_cats(num_cats_poisson, num_cats_cox, num_cats_hawkes, num_cats_dcp)
             np.min(num_cats_dcp),
         ]
     )
-
-    max_cats = min(max_cats, 10)
-
+    
     num_bins = int(max_cats - min_cats + 1)
 
     bins = np.linspace(min_cats, max_cats, num_bins + 1)
@@ -235,18 +235,36 @@ def plot_num_cats(num_cats_poisson, num_cats_cox, num_cats_hawkes, num_cats_dcp)
     plt.xticks(x, bins[:-1])
     plt.legend()
 
+    plt.xlim(0.5, 11.0)
+    plt.xlabel("Number of catastrophes")
+    plt.ylabel("Number of simulations")
+
+    # Change the aspect ratio to be wider
+    plt.gcf().set_size_inches(8, 2.5)
+
+    # Remove the top and right spines
+    plt.gca().spines["top"].set_visible(False)
+    plt.gca().spines["right"].set_visible(False)
+
 
 plot_num_cats(num_cats_poisson, num_cats_cox, num_cats_hawkes, num_cats_dcp)
+plt.savefig("num_catastrophe_hists.png")
 # -
 
-prices_poisson = calculate_prices(V_T, L_T, int_r_t, C_T_poisson, markup)
-prices_poisson
+ROUNDING = 4
 
-prices_cox = calculate_prices(V_T, L_T, int_r_t, C_T_cox, markup)
-prices_cox
+prices_poisson = calculate_prices(V_T, L_T, int_r_t, C_T_poisson, markup).round(ROUNDING)
+display(prices_poisson)
+print(prices_poisson.style.to_latex().replace("00 ", " ").replace("lrrrrrrr", "c|c|c|c|c|c|c|c"))
 
-prices_hawkes = calculate_prices(V_T, L_T, int_r_t, C_T_hawkes, markup)
-prices_hawkes
+prices_cox = calculate_prices(V_T, L_T, int_r_t, C_T_cox, markup).round(ROUNDING)
+display(prices_cox)
+print(prices_cox.style.to_latex().replace("00 ", " ").replace("lrrrrrrr", "c|c|c|c|c|c|c|c"))
 
-prices_dcp = calculate_prices(V_T, L_T, int_r_t, C_T_dcp, markup)
-prices_dcp
+prices_hawkes = calculate_prices(V_T, L_T, int_r_t, C_T_hawkes, markup).round(ROUNDING)
+display(prices_hawkes)
+print(prices_hawkes.style.to_latex().replace("00 ", " ").replace("lrrrrrrr", "c|c|c|c|c|c|c|c"))
+
+prices_dcp = calculate_prices(V_T, L_T, int_r_t, C_T_dcp, markup).round(ROUNDING)
+display(prices_dcp)
+print(prices_dcp.style.to_latex().replace("00 ", " ").replace("lrrrrrrr", "c|c|c|c|c|c|c|c"))

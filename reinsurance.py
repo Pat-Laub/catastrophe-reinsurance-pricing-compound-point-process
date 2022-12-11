@@ -108,7 +108,7 @@ def calculate_prices(
             prices[i][j] = (1 + markup) * np.mean(discounted_payouts)
 
     df = pd.DataFrame(
-        prices, columns=[f"M={m}" for m in Ms], index=[f"A={a}" for a in As]
+        prices, columns=[f"$M={m}$" for m in Ms], index=[f"$A={a}$" for a in As]
     )
 
     return df
