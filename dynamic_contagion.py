@@ -9,22 +9,23 @@ def simulate_num_dynamic_contagion(
     a: float,
     rho: float,
     delta: float,
-    selfJumpSizeDist: Callable[[], float],
-    extJumpSizeDist: Callable[[], float],
+    selfJumpSizeDist: Callable[[np.random.Generator], float],
+    extJumpSizeDist: Callable[[np.random.Generator], float],
 ) -> int:
-    """
-    Simulate a dynamic contagion process and return the number of arrivals.
+    """Simulate a dynamic contagion process and return the number of arrivals.
 
-    :param rg: A random number generator.
-    :param maxTime: When to stop simulating.
-    :param lambda0: The initial intensity at time t = 0.
-    :param a: The constant mean-reverting level.
-    :param rho: The rate of arrivals for the Poisson external jumps.
-    :param delta: The rate of exponential decay in intensity.
-    :param selfJumpSizeDist: A function which samples intensity jump sizes for self-arrivals.
-    :param extJumpSizeDist: A function which samples intensity jump sizes for external-arrivals.
+    Args:
+        rg: A random number generator.
+        maxTime: When to stop simulating.
+        lambda0: The initial intensity at time t = 0.
+        a: The constant mean-reverting level.
+        rho: The rate of arrivals for the Poisson external jumps.
+        delta: The rate of exponential decay in intensity.
+        selfJumpSizeDist: A function which samples intensity jump sizes for self-arrivals.
+        extJumpSizeDist: A function which samples intensity jump sizes for external-arrivals.
 
-    :returns: The number of arrivals for a dynamic contagion process.
+    Returns:
+        The number of arrivals for a dynamic contagion process.
     """
 
     # Step 1: Set initial conditions
