@@ -53,19 +53,19 @@ all_time_series = get_market_conditions(R=R, seed=seed, maturity=maturity, kappa
         lambda_r=lambda_r, m=m, phi_V=phi_V, sigma_V=sigma_V, phi_L=phi_L, sigma_L=sigma_L,
         upsilon=upsilon, V_0=V_0, L_0=L_0, r_0=r_0)
 
-summarised_time_series = summarise_market_conditions(all_time_series, maturity)
+V_T, L_T, int_r_t = summarise_market_conditions(all_time_series, maturity)
 
-plt.hist(summarised_time_series[:, 0], 30, label="Assets")
+plt.hist(V_T, 30, label="Assets")
 plt.axvline(V_0, c="r", ls="--")
 plt.legend()
 plt.show()
 
-plt.hist(summarised_time_series[:, 1], 30, label="Liabilities")
+plt.hist(L_T, 30, label="Liabilities")
 plt.axvline(L_0, c="r", ls="--")
 plt.legend()
 plt.show()
 
-plt.hist(summarised_time_series[:, 2], 30, label="Interest rates")
+plt.hist(int_r_t, 30, label="Interest rates (integrated)")
 plt.axvline(r_0, c="r", ls="--")
 plt.legend()
 plt.show()
