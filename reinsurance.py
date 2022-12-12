@@ -1,7 +1,30 @@
 import numpy as np
 import pandas as pd
-from tqdm.auto import tqdm
+from tqdm import tqdm
 from typing import Callable, Tuple
+
+
+def payout_without_default(C_T: float, A: float, M: float) -> float:
+    """Calculate the payout assuming the reinsurer cannot default for catastrophe losses.
+
+    Args:
+        C_T: The value of the catastrophe losses at terminal time T.
+        A: The attachment point specified in the reinsurance contract.
+        M: The reinsurance cap (i.e. detachment point).
+
+    Returns:
+        The payout given the simulated catastrophe losses.
+    """
+
+    if C_T >= M:
+        # The reinsurance contract has hit the detachment point.
+        return M - A
+    elif M > C_T and C_T >= A:
+        # The reinsurance contract has not hit detachment point.
+        return C_T - A
+    else:
+        # The catastrophe losses were not large enough to trigger the contract.
+        return 0
 
 
 def payout_with_default(
@@ -20,19 +43,19 @@ def payout_with_default(
         The payout given the final value of assets, liabilities, and catastrophe losses.
     """
 
-    if (C_T >= M) and (V_T >= L_T + M - A):
+    if C_T >= M and V_T >= L_T + M - A:
         # The reinsurance contract has hit the detachment point
         # and the reinsurer has enough assets to pay out.
         return M - A
-    elif (C_T >= M) and (V_T < L_T + M - A):
+    elif C_T >= M and V_T < L_T + M - A:
         # The reinsurance contract has hit the detachment point
         # but the reinsurer does not have enough assets to pay out the full amount.
         return V_T * (M - A) / (L_T + M - A)
-    elif (M > C_T) and (C_T >= A) and (V_T >= L_T + C_T - A):
+    elif M > C_T and C_T >= A and V_T >= L_T + C_T - A:
         # The reinsurance contract has not hit detachment point
         # and the reinsurer has enough assets to pay out.
         return C_T - A
-    elif (M > C_T) and (C_T >= A) and (V_T < L_T + C_T - A):
+    elif M > C_T and C_T >= A and V_T < L_T + C_T - A:
         # The reinsurance contract has not hit detachment point
         # but the reinsurer does not have enough assets to pay out.
         return V_T * (C_T - A) / (L_T + C_T - A)
