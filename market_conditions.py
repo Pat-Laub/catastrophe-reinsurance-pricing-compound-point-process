@@ -126,6 +126,7 @@ def get_market_conditions(
     V_0: float,
     L_0: float,
     r_0: float,
+    verbose: bool = False,
 ) -> np.ndarray:
     """Either loads or generates simulated assets, liabilities, and interest rates.
 
@@ -150,19 +151,23 @@ def get_market_conditions(
         asset, liability, and interest rate time series on a weekly basis.
     """
     args = locals()
+    args.pop("verbose")
     market_params_csv = ",".join(["{}={}".format(k, v) for k, v in args.items()])
     cache_path = DATA_DIR / f"mc-{market_params_csv}.npy"
 
     # Check if the array for the given input x is already cached
     if cache_path.is_file():
         # If the array is cached, load it from disk
-        print(f"Loading '{cache_path}'")
+        if verbose:
+            print(f"Loading '{cache_path}'")
         all_time_series = np.load(str(cache_path))
     else:
         # If the array is not cached, create it and save it to disk
-        print(f"Can't find '{cache_path}', generating market conditions")
+        if verbose:
+            print(f"Can't find '{cache_path}', generating market conditions")
         all_time_series = simulate_market_conditions(**args)
-        print(f"Saving {cache_path}")
+        if verbose:
+            print(f"Saving {cache_path}")
         np.save(str(cache_path), all_time_series)
 
     return all_time_series
