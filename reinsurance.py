@@ -54,7 +54,7 @@ def payout_with_default(
     elif C_T >= M and V_T < L_T + M - A:
         # The reinsurance contract has hit the detachment point
         # but the reinsurer does not have enough assets to pay out the full amount.
-        return V_T * (M - A) / (L_T + M - A)
+        return (M - A) * V_T / (L_T + M - A)
     elif M > C_T and C_T >= A and V_T >= L_T + C_T - A:
         # The reinsurance contract has not hit detachment point
         # and the reinsurer has enough assets to pay out.
@@ -62,7 +62,55 @@ def payout_with_default(
     elif M > C_T and C_T >= A and V_T < L_T + C_T - A:
         # The reinsurance contract has not hit detachment point
         # but the reinsurer does not have enough assets to pay out.
-        return V_T * (C_T - A) / (L_T + C_T - A)
+        return (C_T - A) * V_T / (L_T + C_T - A)
+    else:
+        # The catastrophe losses were not large enough to trigger the contract.
+        return 0
+
+
+def payout_with_default_and_catbond(
+    V_T: float, L_T: float, C_T: float, A: float, M: float, K: float, psi_T: float
+) -> float:
+    """Calculate the payout given the final value of assets, liabilities, and catastrophe losses.
+
+    Args:
+        V_T: The value of the reinsurer's assets at maturity time T.
+        L_T: The value of the reinsurer's liabilities at terminal time T.
+        C_T: The value of the catastrophe losses at terminal time T.
+        A: The attachment point specified in the reinsurance contract.
+        M: The reinsurance cap (i.e. detachment point).
+        K: The catastrophe bond strike price.
+        psi_T: The catastrophe bond payout.
+
+    Returns:
+        The payout given the final value of assets, liabilities, and catastrophe losses.
+    """
+    assert A <= K and K <= M
+
+    if C_T >= M and V_T + psi_T >= L_T + M - A:
+        # The reinsurance contract has hit the detachment point
+        # and the reinsurer has enough assets (after catbond kicks in) to pay out.
+        return M - A
+    elif C_T >= M and V_T + psi_T < L_T + M - A:
+        # The reinsurance contract has hit the detachment point but the
+        # reinsurer doesn't have enough assets (even with the catbond) to pay in full.
+        return (M - A) * (V_T + psi_T) / (L_T + M - A)
+    elif M > C_T and C_T >= A and V_T >= L_T + C_T - A and C_T < K:
+        # The reinsurance contract has not hit detachment point
+        # and the reinsurer has enough assets (without catbond) to pay out.
+        return C_T - A
+    elif M > C_T and C_T >= A and V_T + psi_T >= L_T + C_T - A and C_T >= K:
+        # The reinsurance contract has not hit detachment point
+        # and the reinsurer has enough assets (with catbond) to pay out.
+        return C_T - A
+    elif M > C_T and C_T >= A and V_T < L_T + C_T - A and C_T < K:
+        # The reinsurance contract has not hit detachment point
+        # but the reinsurer does not have enough assets (without catbond) to pay out.
+        return (C_T - A) * V_T / (L_T + C_T - A)
+    elif M > C_T and C_T >= A and V_T + psi_T < L_T + C_T - A and C_T >= K:
+        # The reinsurance contract has not hit detachment point
+        # but the reinsurer does not have enough assets (even with catbond) to pay out.
+        return (C_T - A) * (V_T + psi_T) / (L_T + C_T - A)
     else:
         # The catastrophe losses were not large enough to trigger the contract.
         return 0
@@ -176,6 +224,9 @@ def reinsurance_prices(
     As: float | Tuple[float] = 20.0,
     Ms: float | Tuple[float] = 90.0,
     defaultable: bool = True,
+    catbond: bool = False,
+    K: float = 0.0,
+    psi_T: float = 0.5,
 ) -> np.ndarray:
     """Calculate reinsurance prices using Monte Carlo simulation.
 
@@ -201,10 +252,15 @@ def reinsurance_prices(
         As: A attachment points to consider.
         Ms: A reinsurance caps to consider.
         defaultable: Whether or not the reinsurer can default.
+        catbond: Whether or not the reinsurer has issued a catastrophe bond.
+        psi_T: The face value of the catastrophe bond.
+
 
     Returns:
         A dataframe of floats containing the calculated prices of reinsurance contracts.
     """
+
+    assert not (catbond and not defaultable), "A catbond must be defaultable."
 
     if not hasattr(V_0, "__len__"):
         V_0 = (V_0,)
@@ -263,7 +319,11 @@ def reinsurance_prices(
 
                     payouts = np.empty(R, dtype=float)
                     for r in range(R):
-                        if defaultable:
+                        if catbond:
+                            payouts[r] = payout_with_default_and_catbond(
+                                V_T[r], L_T[r], C_T[r], A, M, K, psi_T(C_T[r], K, F_cat)
+                            )
+                        elif defaultable:
                             payouts[r] = payout_with_default(
                                 V_T[r], L_T[r], C_T[r], A, M
                             )
