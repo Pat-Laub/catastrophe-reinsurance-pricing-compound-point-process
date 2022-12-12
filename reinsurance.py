@@ -1,4 +1,4 @@
-from typing import Callable, Tuple, Type
+from typing import Callable, Tuple
 
 import numpy as np
 import numpy.random as rnd
@@ -71,7 +71,7 @@ def payout_with_default(
 def simulate_catastrophe_losses(
     seed: int,
     R: int,
-    simulate_num_catastrophes: Callable[[np.random.Generator], int],
+    simulate_num_catastrophes: Callable[[int], int],
     mu_C: float,
     sigma_C: float,
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -169,12 +169,13 @@ def reinsurance_prices(
     V_0: float | Tuple[float],
     L_0: float,
     r_0: float,
-    catastrophe_simulators: Tuple[Callable[[np.random.Generator], int]],
+    catastrophe_simulators: Tuple[Callable[[int], int]],
     mu_C: float,
     sigma_C: float,
     markup: float,
     As: float | Tuple[float] = 20.0,
     Ms: float | Tuple[float] = 90.0,
+    defaultable: bool = True,
 ) -> np.ndarray:
     """Calculate reinsurance prices using Monte Carlo simulation.
 
@@ -199,7 +200,7 @@ def reinsurance_prices(
         markup: The markup on the expected value of the payout.
         As: A attachment points to consider.
         Ms: A reinsurance caps to consider.
-
+        defaultable: Whether or not the reinsurer can default.
 
     Returns:
         A dataframe of floats containing the calculated prices of reinsurance contracts.
@@ -241,10 +242,8 @@ def reinsurance_prices(
 
             simulate_num_catastrophes = catastrophe_simulators[c]
 
-            rg = rnd.default_rng(seed)
-
             C_T, _ = simulate_catastrophe_losses(
-                rg,
+                seed + 1,
                 R,
                 simulate_num_catastrophes,
                 mu_C,
@@ -258,7 +257,12 @@ def reinsurance_prices(
 
                     payouts = np.empty(R, dtype=float)
                     for r in range(R):
-                        payouts[r] = payout_with_default(V_T[r], L_T[r], C_T[r], A, M)
+                        if defaultable:
+                            payouts[r] = payout_with_default(
+                                V_T[r], L_T[r], C_T[r], A, M
+                            )
+                        else:
+                            payouts[r] = payout_without_default(C_T[r], A, M)
 
                     discounted_payouts = np.exp(-int_r_t) * payouts
 

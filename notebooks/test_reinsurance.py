@@ -78,6 +78,8 @@ V_T, L_T, int_r_t = summarise_market_conditions(all_time_series, maturity)
 assert np.isnan(all_time_series).mean() == 0
 
 
+# ## Generate catastrophe scenarios
+
 # +
 # Poisson process
 def simulate_poisson(seed):
@@ -328,6 +330,8 @@ plot_num_cats(num_cats_poisson, num_cats_cox, num_cats_hawkes, num_cats_dcp)
 plt.savefig("num_catastrophe_hists.png")
 # -
 
+# ## Tables 1-4 (LaTeX)
+
 ROUNDING = 4
 
 prices_poisson = calculate_prices(V_T, L_T, int_r_t, C_T_poisson, markup).round(
@@ -391,113 +395,3 @@ prices = reinsurance_prices(
 )
 
 prices
-
-# +
-# %%time
-prices = reinsurance_prices(
-    R,
-    seed,
-    maturity,
-    k,
-    lambda_r,
-    m,
-    phi_V,
-    sigma_V,
-    phi_L,
-    sigma_L,
-    upsilon,
-    V_0,
-    L_0,
-    r_0,
-    (simulate_poisson, simulate_cox, simulate_hawkes, simulate_dcp),
-    mu_C,
-    sigma_C,
-    markup,
-    As=(10.0, 15.0, 20.0, 25.0, 30.0),
-    Ms=(60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0),
-)
-
-prices.shape
-# -
-
-# Tables 1 to 4
-cat_models = ("Poisson", "Cox", "Hawkes", "DCP")
-for c in range(4):
-    print(cat_models[c])
-    display(pd.DataFrame(prices[c]).round(4))
-
-# +
-# %%time
-prices = reinsurance_prices(
-    R,
-    seed,
-    maturity,
-    k,
-    lambda_r,
-    m,
-    phi_V,
-    sigma_V,
-    phi_L,
-    sigma_L,
-    upsilon,
-    tuple(int(scale * L_0) for scale in (1.1, 1.3, 1.5)),
-    L_0,
-    r_0,
-    simulate_dcp,
-    mu_C,
-    sigma_C,
-    markup,
-)
-
-prices.shape
-# -
-
-prices.round(4)
-
-# +
-from functools import partial
-
-
-def simulate_dcp_variations(seed, rho):
-    lambda0 = 0.29
-    a = 0.26
-    delta = 1
-
-    return simulate_num_dynamic_contagion_uniform_jumps(
-        seed, maturity, lambda0, a, rho, delta, 0.0, 1.0, 0.0, 0.5
-    )
-
-
-simulators = []
-
-for new_rho in (0.4, 3, 10, 20):
-    simulators.append(partial(simulate_dcp_variations, rho=new_rho))
-# -
-
-# %%time
-prices = reinsurance_prices(
-    R,
-    seed,
-    maturity,
-    k,
-    lambda_r,
-    m,
-    phi_V,
-    sigma_V,
-    phi_L,
-    sigma_L,
-    upsilon,
-    tuple(int(scale * L_0) for scale in (1.1, 1.3, 1.5)),
-    L_0,
-    r_0,
-    simulators,
-    mu_C,
-    sigma_C,
-    markup,
-)
-
-prices.shape
-
-prices.T
-
-
