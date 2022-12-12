@@ -219,6 +219,12 @@ def reinsurance_prices(
 
     for v in range(len(V_0)):
 
+        # If calculating the default-free price, then the initial value of the assets
+        # has no effect on the price, so we can just duplicate the prices.
+        if not defaultable and v > 0:
+            prices[v] = prices[0]
+            continue
+
         all_time_series = get_market_conditions(
             R,
             seed,

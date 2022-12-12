@@ -16,6 +16,7 @@
 # %config InlineBackend.figure_format='retina'
 
 # Add the parent directory to the path so that we can import the modules.
+from functools import partial
 import os
 import sys
 
@@ -101,11 +102,11 @@ def simulate_dcp(seed):
     return simulate_num_dynamic_contagion_uniform_jumps(
         seed, maturity, lambda0, a, rho, delta, 0.0, 1.0, 0.0, 0.5
     )
+
+
 # -
 
 # ## Tables 1-4
-
-
 
 # +
 # %%time
@@ -143,9 +144,8 @@ for c in range(4):
 
 # ## Table 5: Default risk premium
 
-# +
 # %%time
-prices = reinsurance_prices(
+risky_prices = reinsurance_prices(
     R,
     seed,
     maturity,
@@ -164,17 +164,12 @@ prices = reinsurance_prices(
     mu_C,
     sigma_C,
     markup,
-)
+)[:, np.newaxis]
 
-prices.shape
-# -
-
-risky_prices = prices[:, np.newaxis]
 risky_prices.round(4)
 
-# +
 # %%time
-prices = reinsurance_prices(
+safe_prices = reinsurance_prices(
     R,
     seed,
     maturity,
@@ -194,12 +189,8 @@ prices = reinsurance_prices(
     sigma_C,
     markup,
     defaultable=False,
-)
+)[:, np.newaxis]
 
-prices.shape
-# -
-
-safe_prices = prices[:, np.newaxis]
 safe_prices.round(4)
 
 risk_premium = safe_prices - risky_prices
@@ -207,12 +198,10 @@ risk_premium.round(4)
 
 np.hstack((risky_prices, safe_prices, risk_premium)).round(4)
 
+
 # ## Table 6: Impacts of externally-excited jump frequency rate
 
 # +
-from functools import partial
-
-
 def simulate_dcp_variations(seed, rho):
     lambda0 = 0.29
     a = 0.26
@@ -223,10 +212,7 @@ def simulate_dcp_variations(seed, rho):
     )
 
 
-simulators = []
-
-for new_rho in (0.4, 3, 10, 20):
-    simulators.append(partial(simulate_dcp_variations, rho=new_rho))
+simulators = [partial(simulate_dcp_variations, rho=rho) for rho in (0.4, 3, 10, 20)]
 # -
 
 # %%time
@@ -251,7 +237,7 @@ risky_prices = reinsurance_prices(
     markup,
 ).T
 
-risky_prices
+risky_prices.round(4)
 
 # %%time
 safe_prices = reinsurance_prices(
@@ -276,7 +262,7 @@ safe_prices = reinsurance_prices(
     defaultable=False,
 ).T
 
-safe_prices
+safe_prices.round(4)
 
 risk_premium = safe_prices - risky_prices
 
@@ -297,10 +283,9 @@ def simulate_dcp_variations(seed, mu_F=0.25, mu_G=0.5):
     )
 
 
-simulators = []
-
-for new_mu_F in (0.25, 1, 4, 8):
-    simulators.append(partial(simulate_dcp_variations, mu_F=new_mu_F))
+simulators = [
+    partial(simulate_dcp_variations, mu_F=mu_F) for mu_F in (0.25, 1.0, 4.0, 8.0)
+]
 
 # +
 # %%time
@@ -357,9 +342,9 @@ np.hstack([risky_prices, risk_premium]).round(4)
 # +
 # %%time
 
-simulators = []
-for new_mu_G in (0.5, 1, 2, 3):
-    simulators.append(partial(simulate_dcp_variations, mu_G=new_mu_G))
+simulators = [
+    partial(simulate_dcp_variations, mu_G=mu_G) for mu_G in (0.5, 1.0, 2.0, 3.0)
+]
 
 risky_prices = reinsurance_prices(
     R,
