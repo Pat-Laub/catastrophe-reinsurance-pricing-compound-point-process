@@ -44,27 +44,27 @@ sigma_L = 0.02
 
 # Interest rate parameters
 r_0 = 0.02
-kappa = 0.2
+k = 0.2
 m = 0.05  # 0.5
 upsilon = 0.1
 lambda_r = -0.01
 
 # +
 all_time_series = get_market_conditions(
-    R=R,
-    seed=seed,
-    maturity=maturity,
-    kappa=kappa,
-    lambda_r=lambda_r,
-    m=m,
-    phi_V=phi_V,
-    sigma_V=sigma_V,
-    phi_L=phi_L,
-    sigma_L=sigma_L,
-    upsilon=upsilon,
-    V_0=V_0,
-    L_0=L_0,
-    r_0=r_0,
+    R,
+    seed,
+    maturity,
+    k,
+    lambda_r,
+    m,
+    phi_V,
+    sigma_V,
+    phi_L,
+    sigma_L,
+    upsilon,
+    V_0,
+    L_0,
+    r_0,
 )
 
 V_T, L_T, int_r_t = summarise_market_conditions(all_time_series, maturity)

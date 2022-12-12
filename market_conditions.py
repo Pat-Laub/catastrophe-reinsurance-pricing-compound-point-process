@@ -4,20 +4,19 @@ import numpy as np
 import numpy.random as rnd
 import sdeint
 from joblib import Parallel, delayed
-from tqdm import tqdm
 
 # Create a pathlib path to the data directory (a subdirectory of this file's directory)
 DATA_DIR = Path(__file__).parent / "data"
 
 
-def drift_function_generator(kappa, lambda_r, m):
+def drift_function_generator(k, lambda_r, m):
     # Risk neutral transformations
-    kappa_star = kappa + lambda_r
-    m_star = kappa * m / kappa_star
+    k_star = k + lambda_r
+    m_star = k * m / k_star
 
     def drift(x, t):
         V, L, r = x
-        return np.array([r * V, r * L, kappa_star * (m_star - r)])
+        return np.array([r * V, r * L, k_star * (m_star - r)])
 
     return drift
 
@@ -38,29 +37,50 @@ def diffusion_function_generator(phi_V, sigma_V, phi_L, sigma_L, upsilon):
 
 
 def simulate_market_conditions(
-    *,
-    R,
-    seed,
-    maturity,
-    kappa,
-    lambda_r,
-    m,
-    phi_V,
-    sigma_V,
-    phi_L,
-    sigma_L,
-    upsilon,
-    V_0,
-    L_0,
-    r_0,
-):
+    R: int,
+    seed: int,
+    maturity: float,
+    k: float,
+    lambda_r: float,
+    m: float,
+    phi_V: float,
+    sigma_V: float,
+    phi_L: float,
+    sigma_L: float,
+    upsilon: float,
+    V_0: float,
+    L_0: float,
+    r_0: float,
+) -> np.ndarray:
+    """Simulate assets, liabilities, and interest rates for a given number of years.
+
+    Args:
+        R: The number of Monte Carlo samples to generate.
+        seed: The seed for the random number generator.
+        maturity: The maturity of the market in years.
+        k: Mean-reversion parameter for the interest rate process.
+        lambda_r: The lambda_r parameter.**************
+        m: Long-run mean of the interest rate process.
+        phi_V: Interest rate elasticity of the assets.
+        sigma_V: Volatility of credit risk.
+        phi_L: Interest rate elastiticity of liability process.
+        sigma_L: Volatility of idiosyncratic risk.
+        upsilon: Volatility of the interest rate process.
+        V_0: The initial value of the reinsurer's assets.
+        L_0: The initial value of the reinsurer's liabilities.
+        r_0: The initial value of instantaneous interest rate.
+
+    Returns:
+        A numpy array of shape (R, maturity*52, 3) representing the simulated
+        asset, liability, and interest rate time series on a weekly basis.
+    """
 
     # Setup for the SDE solving
-    f = drift_function_generator(kappa, lambda_r, m)
+    f = drift_function_generator(k, lambda_r, m)
     G = diffusion_function_generator(phi_V, sigma_V, phi_L, sigma_L, upsilon)
 
     x0 = np.array([V_0, L_0, r_0])
-    tspan = np.linspace(0.0, maturity, 156)
+    tspan = np.linspace(0.0, maturity, int(maturity * 52))
 
     # Container for all the simulated market conditions
     all_time_series = np.empty((R, len(tspan), 3), dtype=float)
@@ -84,14 +104,52 @@ def simulate_market_conditions(
 
     all_time_series = np.array(
         Parallel(n_jobs=-1)(
-            delayed_simulate(seed) for seed in tqdm(rg.integers(0, 2**32, size=R))
+            delayed_simulate(seed) for seed in rg.integers(0, 2**32, size=R)
         )
     )
 
     return all_time_series
 
 
-def get_market_conditions(**args):
+def get_market_conditions(
+    R: int,
+    seed: int,
+    maturity: float,
+    k: float,
+    lambda_r: float,
+    m: float,
+    phi_V: float,
+    sigma_V: float,
+    phi_L: float,
+    sigma_L: float,
+    upsilon: float,
+    V_0: float,
+    L_0: float,
+    r_0: float,
+) -> np.ndarray:
+    """Either loads or generates simulated assets, liabilities, and interest rates.
+
+    Args:
+        R: The number of Monte Carlo samples to generate.
+        seed: The seed for the random number generator.
+        maturity: The maturity of the market in years.
+        k: Mean-reversion parameter for the interest rate process.
+        lambda_r: The lambda_r parameter.**************
+        m: Long-run mean of the interest rate process.
+        phi_V: Interest rate elasticity of the assets.
+        sigma_V: Volatility of credit risk.
+        phi_L: Interest rate elastiticity of liability process.
+        sigma_L: Volatility of idiosyncratic risk.
+        upsilon: Volatility of the interest rate process.
+        V_0: The initial value of the reinsurer's assets.
+        L_0: The initial value of the reinsurer's liabilities.
+        r_0: The initial value of instantaneous interest rate.
+
+    Returns:
+        A numpy array of shape (R, maturity*52, 3) representing the simulated
+        asset, liability, and interest rate time series on a weekly basis.
+    """
+    args = locals()
     market_params_csv = ",".join(["{}={}".format(k, v) for k, v in args.items()])
     cache_path = DATA_DIR / f"mc-{market_params_csv}.npy"
 
@@ -118,7 +176,7 @@ def summarise_market_conditions(all_time_series, maturity):
     L_T = np.zeros(R)
     int_r_t = np.zeros(R)
 
-    for r in tqdm(range(R)):
+    for r in range(R):
         # Store the final values of the assets and liabilities
         V_T[r] = all_time_series[r, -1, 0]
         L_T[r] = all_time_series[r, -1, 1]
