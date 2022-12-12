@@ -159,7 +159,7 @@ def reinsurance_prices(
     seed: int,
     maturity: float,
     k: float,
-    lambda_r: float,
+    eta_r: float,
     m: float,
     phi_V: float,
     sigma_V: float,
@@ -184,7 +184,7 @@ def reinsurance_prices(
         seed: The seed for the random number generator.
         maturity: The maturity of the market in years.
         k: Mean-reversion parameter for the interest rate process.
-        lambda_r: The lambda_r parameter.**************
+        eta_r: The market price of interest rate risk.
         m: Long-run mean of the interest rate process.
         phi_V: Interest rate elasticity of the assets.
         sigma_V: Volatility of credit risk.
@@ -230,7 +230,7 @@ def reinsurance_prices(
             seed,
             maturity,
             k,
-            lambda_r,
+            eta_r,
             m,
             phi_V,
             sigma_V,

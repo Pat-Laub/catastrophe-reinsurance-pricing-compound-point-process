@@ -9,9 +9,9 @@ from joblib import Parallel, delayed
 DATA_DIR = Path(__file__).parent / "data"
 
 
-def drift_function_generator(k, lambda_r, m):
+def drift_function_generator(k, eta_r, m):
     # Risk neutral transformations
-    k_star = k + lambda_r
+    k_star = k + eta_r
     m_star = k * m / k_star
 
     def drift(x, t):
@@ -41,7 +41,7 @@ def simulate_market_conditions(
     seed: int,
     maturity: float,
     k: float,
-    lambda_r: float,
+    eta_r: float,
     m: float,
     phi_V: float,
     sigma_V: float,
@@ -59,7 +59,7 @@ def simulate_market_conditions(
         seed: The seed for the random number generator.
         maturity: The maturity of the market in years.
         k: Mean-reversion parameter for the interest rate process.
-        lambda_r: The lambda_r parameter.**************
+        eta_r: The market price of interest rate risk.
         m: Long-run mean of the interest rate process.
         phi_V: Interest rate elasticity of the assets.
         sigma_V: Volatility of credit risk.
@@ -76,7 +76,7 @@ def simulate_market_conditions(
     """
 
     # Setup for the SDE solving
-    f = drift_function_generator(k, lambda_r, m)
+    f = drift_function_generator(k, eta_r, m)
     G = diffusion_function_generator(phi_V, sigma_V, phi_L, sigma_L, upsilon)
 
     x0 = np.array([V_0, L_0, r_0])
@@ -116,7 +116,7 @@ def get_market_conditions(
     seed: int,
     maturity: float,
     k: float,
-    lambda_r: float,
+    eta_r: float,
     m: float,
     phi_V: float,
     sigma_V: float,
@@ -134,7 +134,7 @@ def get_market_conditions(
         seed: The seed for the random number generator.
         maturity: The maturity of the market in years.
         k: Mean-reversion parameter for the interest rate process.
-        lambda_r: The lambda_r parameter.**************
+        eta_r: The market price of interest rate risk.
         m: Long-run mean of the interest rate process.
         phi_V: Interest rate elasticity of the assets.
         sigma_V: Volatility of credit risk.

@@ -53,7 +53,7 @@ r_0 = 0.02
 k = 0.2
 m = 0.05  # 0.5
 upsilon = 0.1
-lambda_r = -0.01
+eta_r = -0.01
 
 # Catastrophe loss size distribution parameters
 mu_C = 2
@@ -115,7 +115,7 @@ prices = reinsurance_prices(
     seed,
     maturity,
     k,
-    lambda_r,
+    eta_r,
     m,
     phi_V,
     sigma_V,
@@ -150,7 +150,7 @@ risky_prices = reinsurance_prices(
     seed,
     maturity,
     k,
-    lambda_r,
+    eta_r,
     m,
     phi_V,
     sigma_V,
@@ -174,7 +174,7 @@ safe_prices = reinsurance_prices(
     seed,
     maturity,
     k,
-    lambda_r,
+    eta_r,
     m,
     phi_V,
     sigma_V,
@@ -221,7 +221,7 @@ risky_prices = reinsurance_prices(
     seed,
     maturity,
     k,
-    lambda_r,
+    eta_r,
     m,
     phi_V,
     sigma_V,
@@ -245,7 +245,7 @@ safe_prices = reinsurance_prices(
     seed,
     maturity,
     k,
-    lambda_r,
+    eta_r,
     m,
     phi_V,
     sigma_V,
@@ -294,7 +294,7 @@ risky_prices = reinsurance_prices(
     seed,
     maturity,
     k,
-    lambda_r,
+    eta_r,
     m,
     phi_V,
     sigma_V,
@@ -315,7 +315,7 @@ safe_prices = reinsurance_prices(
     seed,
     maturity,
     k,
-    lambda_r,
+    eta_r,
     m,
     phi_V,
     sigma_V,
@@ -351,7 +351,7 @@ risky_prices = reinsurance_prices(
     seed,
     maturity,
     k,
-    lambda_r,
+    eta_r,
     m,
     phi_V,
     sigma_V,
@@ -372,7 +372,7 @@ safe_prices = reinsurance_prices(
     seed,
     maturity,
     k,
-    lambda_r,
+    eta_r,
     m,
     phi_V,
     sigma_V,
