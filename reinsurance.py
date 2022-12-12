@@ -1,7 +1,11 @@
+from typing import Callable, Tuple, Type
+
 import numpy as np
+import numpy.random as rnd
 import pandas as pd
 from tqdm import tqdm
-from typing import Callable, Tuple
+
+from market_conditions import get_market_conditions, summarise_market_conditions
 
 
 def payout_without_default(C_T: float, A: float, M: float) -> float:
@@ -65,7 +69,7 @@ def payout_with_default(
 
 
 def simulate_catastrophe_losses(
-    rg: np.random.Generator,
+    seed: int,
     R: int,
     simulate_num_catastrophes: Callable[[np.random.Generator], int],
     mu_C: float,
@@ -74,7 +78,7 @@ def simulate_catastrophe_losses(
     """Simulate the losses incurred by natural catastrophes.
 
     Args:
-        rg: An instance of the numpy.random.Generator class.
+        seed: The seed for the random number generator.
         R: Number of Monte Carlo samples to generate.
         simulate_num_catastrophes: A function which simulates the number of catastrophes.
         mu_C: The mean of the lognormal distribution of catastrophe losses.
@@ -84,10 +88,12 @@ def simulate_catastrophe_losses(
         A numpy array containing the losses incurred by natural catastrophes.
     """
     num_catastrophes = np.empty(R, dtype=int)
+    rg = rnd.default_rng(seed)
+    seeds = rg.integers(0, 2**32, size=R)
     C_T = np.empty(R, dtype=float)
 
     for i in tqdm(range(R)):
-        num_catastrophes[i] = simulate_num_catastrophes(rg)
+        num_catastrophes[i] = simulate_num_catastrophes(seeds[i])
         C_T[i] = np.sum(rg.lognormal(mu_C, sigma_C, size=num_catastrophes[i]))
 
     return C_T, num_catastrophes
@@ -99,7 +105,9 @@ def calculate_prices(
     int_r_t: np.ndarray,
     C_T: np.ndarray,
     markup: float,
-) -> pd.DataFrame:
+    As: Tuple[float] = (10.0, 15.0, 20.0, 25.0, 30.0),
+    Ms: Tuple[float] = (60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0),
+) -> pd.DataFrame | float:
     """Calculate prices for reinsurance contracts at various attachment and cap levels.
 
     Args:
@@ -108,13 +116,14 @@ def calculate_prices(
         int_r_t: The value of integral of r_t over the time interval [0, T].
         C_T: The value of the catastrophe losses at terminal time T.
         markup: The markup on the expected value of the payout.
+        As: A tuple of floats containing the attachment points to consider.
+        Ms: A tuple of floats containing the caps to consider.
 
     Returns:
-        A numpy array of floats containing the calculated prices of reinsurance contracts.
+        A dataframe of floats containing the calculated prices of reinsurance contracts.
+        Exceptionally, if the length of As and Ms is 1, then a float is returned.
     """
-    As = [10, 15, 20, 25, 30]
-    Ms = [60, 65, 70, 75, 80, 85, 90]
-
+    R = len(V_T)
     prices = np.zeros((len(As), len(Ms)))
     for i in range(len(As)):
         for j in range(len(Ms)):
@@ -122,16 +131,141 @@ def calculate_prices(
             M = Ms[j]
 
             # Create empty array to store payouts
-            payouts = np.empty(len(V_T))
-            for k in range(len(V_T)):
-                payouts[k] = payout_with_default(V_T[k], L_T[k], C_T[k], A, M)
+            payouts = np.empty(R, dtype=float)
+            for r in range(R):
+                payouts[r] = payout_with_default(V_T[r], L_T[r], C_T[r], A, M)
 
             discounted_payouts = np.exp(-int_r_t) * payouts
 
             prices[i][j] = (1 + markup) * np.mean(discounted_payouts)
 
-    df = pd.DataFrame(
-        prices, columns=[f"$M={m}$" for m in Ms], index=[f"$A={a}$" for a in As]
-    )
+    if len(As) == 1 and len(Ms) == 1:
+        return prices[0][0]
+
+    try:
+        cols = [f"$M={int(m)}$" for m in Ms]
+        rows = [f"$A={int(a)}$" for a in As]
+    except ValueError:
+        cols = [f"$M={m}$" for m in Ms]
+        rows = [f"$A={a}$" for a in As]
+
+    df = pd.DataFrame(prices, columns=cols, index=rows)
 
     return df
+
+
+def reinsurance_prices(
+    R: int,
+    seed: int,
+    maturity: float,
+    k: float,
+    lambda_r: float,
+    m: float,
+    phi_V: float,
+    sigma_V: float,
+    phi_L: float,
+    sigma_L: float,
+    upsilon: float,
+    V_0: float | Tuple[float],
+    L_0: float,
+    r_0: float,
+    catastrophe_simulators: Tuple[Callable[[np.random.Generator], int]],
+    mu_C: float,
+    sigma_C: float,
+    markup: float,
+    As: float | Tuple[float] = 20.0,
+    Ms: float | Tuple[float] = 90.0,
+) -> np.ndarray:
+    """Calculate reinsurance prices using Monte Carlo simulation.
+
+    Args:
+        R: The number of Monte Carlo samples to generate.
+        seed: The seed for the random number generator.
+        maturity: The maturity of the market in years.
+        k: Mean-reversion parameter for the interest rate process.
+        lambda_r: The lambda_r parameter.**************
+        m: Long-run mean of the interest rate process.
+        phi_V: Interest rate elasticity of the assets.
+        sigma_V: Volatility of credit risk.
+        phi_L: Interest rate elastiticity of liability process.
+        sigma_L: Volatility of idiosyncratic risk.
+        upsilon: Volatility of the interest rate process.
+        V_0: The initial value of the reinsurer's assets.
+        L_0: The initial value of the reinsurer's liabilities.
+        r_0: The initial value of instantaneous interest rate.
+        simulate_num_catastrophes: A function which simulates the number of natural catastrophes.
+        mu_C: The mean of the lognormal distribution of catastrophe losses.
+        sigma_C: The standard deviation of the lognormal distribution of catastrophe losses.
+        markup: The markup on the expected value of the payout.
+        As: A attachment points to consider.
+        Ms: A reinsurance caps to consider.
+
+
+    Returns:
+        A dataframe of floats containing the calculated prices of reinsurance contracts.
+    """
+
+    if not hasattr(V_0, "__len__"):
+        V_0 = (V_0,)
+    if not hasattr(catastrophe_simulators, "__len__"):
+        catastrophe_simulators = (catastrophe_simulators,)
+    if not hasattr(As, "__len__"):
+        As = (As,)
+    if not hasattr(Ms, "__len__"):
+        Ms = (Ms,)
+
+    prices = np.zeros((len(V_0), len(catastrophe_simulators), len(As), len(Ms)))
+
+    for v in range(len(V_0)):
+
+        all_time_series = get_market_conditions(
+            R,
+            seed,
+            maturity,
+            k,
+            lambda_r,
+            m,
+            phi_V,
+            sigma_V,
+            phi_L,
+            sigma_L,
+            upsilon,
+            V_0[v],
+            L_0,
+            r_0,
+        )
+
+        V_T, L_T, int_r_t = summarise_market_conditions(all_time_series, maturity)
+
+        for c in tqdm(range(len(catastrophe_simulators))):
+
+            simulate_num_catastrophes = catastrophe_simulators[c]
+
+            rg = rnd.default_rng(seed)
+
+            C_T, _ = simulate_catastrophe_losses(
+                rg,
+                R,
+                simulate_num_catastrophes,
+                mu_C,
+                sigma_C,
+            )
+
+            for i in range(len(As)):
+                for j in range(len(Ms)):
+                    A = As[i]
+                    M = Ms[j]
+
+                    payouts = np.empty(R, dtype=float)
+                    for r in range(R):
+                        payouts[r] = payout_with_default(V_T[r], L_T[r], C_T[r], A, M)
+
+                    discounted_payouts = np.exp(-int_r_t) * payouts
+
+                    prices[v, c, i, j] = (1 + markup) * np.mean(discounted_payouts)
+
+    prices = prices.squeeze()
+    if not prices.shape:
+        prices = float(prices)
+
+    return prices

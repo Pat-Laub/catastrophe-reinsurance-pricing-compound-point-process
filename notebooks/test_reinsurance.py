@@ -49,27 +49,27 @@ sigma_L = 0.02
 
 # Interest rate parameters
 r_0 = 0.02
-kappa = 0.2
+k = 0.2
 m = 0.05  # 0.5
 upsilon = 0.1
 lambda_r = -0.01
 
 # +
 all_time_series = get_market_conditions(
-    R=R,
-    seed=seed,
-    maturity=maturity,
-    kappa=kappa,
-    lambda_r=lambda_r,
-    m=m,
-    phi_V=phi_V,
-    sigma_V=sigma_V,
-    phi_L=phi_L,
-    sigma_L=sigma_L,
-    upsilon=upsilon,
-    V_0=V_0,
-    L_0=L_0,
-    r_0=r_0,
+    R,
+    seed,
+    maturity,
+    k,
+    lambda_r,
+    m,
+    phi_V,
+    sigma_V,
+    phi_L,
+    sigma_L,
+    upsilon,
+    V_0,
+    L_0,
+    r_0,
 )
 
 V_T, L_T, int_r_t = summarise_market_conditions(all_time_series, maturity)
@@ -80,18 +80,20 @@ assert np.isnan(all_time_series).mean() == 0
 
 # +
 # Poisson process
-def simulate_poisson(rg):
+def simulate_poisson(seed):
     lambda_ = 0.5
+    rg = rnd.default_rng(seed)
     return rg.poisson(lambda_ * maturity)
 
 
 # Cox proces
-def simulate_cox(rg):
+def simulate_cox(seed):
     lambda0 = 0.49
     a = 0.4
     rho = 0.4
     delta = 1
 
+    rg = rnd.default_rng(seed)
     selfJumpSizeDist = lambda rg: 0
     extJumpSizeDist = lambda rg: rg.uniform(0, 0.5)
 
@@ -101,12 +103,13 @@ def simulate_cox(rg):
 
 
 # Hawkes process
-def simulate_hawkes(rg):
+def simulate_hawkes(seed):
     lambda0 = 0.47
     a = 0.26
     rho = 0.4
     delta = 1
 
+    rg = rnd.default_rng(seed)
     selfJumpSizeDist = lambda rg: rg.uniform()
     extJumpSizeDist = lambda rg: 0
 
@@ -116,12 +119,13 @@ def simulate_hawkes(rg):
 
 
 # Dynamic contagion process
-def simulate_dcp(rg):
+def simulate_dcp(seed):
     lambda0 = 0.29
     a = 0.26
     rho = 0.4
     delta = 1
 
+    rg = rnd.default_rng(seed)
     selfJumpSizeDist = lambda rg: rg.uniform()
     extJumpSizeDist = lambda rg: rg.uniform(0, 0.5)
 
@@ -131,24 +135,97 @@ def simulate_dcp(rg):
 
 
 # +
+# %%time
 # Catastrophe loss size distribution parameters
 mu_C = 2
 sigma_C = 0.5
 
 seed = 123
-rg = rnd.default_rng(seed)
 
 C_T_poisson, num_cats_poisson = simulate_catastrophe_losses(
-    rg, R, simulate_poisson, mu_C, sigma_C
+    seed, R, simulate_poisson, mu_C, sigma_C
 )
 
-C_T_cox, num_cats_cox = simulate_catastrophe_losses(rg, R, simulate_cox, mu_C, sigma_C)
+C_T_cox, num_cats_cox = simulate_catastrophe_losses(
+    seed, R, simulate_cox, mu_C, sigma_C
+)
 
 C_T_hawkes, num_cats_hawkes = simulate_catastrophe_losses(
-    rg, R, simulate_hawkes, mu_C, sigma_C
+    seed, R, simulate_hawkes, mu_C, sigma_C
 )
 
-C_T_dcp, num_cats_dcp = simulate_catastrophe_losses(rg, R, simulate_dcp, mu_C, sigma_C)
+C_T_dcp, num_cats_dcp = simulate_catastrophe_losses(
+    seed, R, simulate_dcp, mu_C, sigma_C
+)
+
+
+# +
+# Poisson process
+def simulate_poisson(seed):
+    lambda_ = 0.5
+    rg = rnd.default_rng(seed)
+    return rg.poisson(lambda_ * maturity)
+
+
+# Cox proces
+def simulate_cox(seed):
+    lambda0 = 0.49
+    a = 0.4
+    rho = 0.4
+    delta = 1
+
+    return simulate_num_dynamic_contagion_uniform_jumps(
+        seed, maturity, lambda0, a, rho, delta, 0.0, 0.0, 0.0, 0.5
+    )
+
+
+# Hawkes process
+def simulate_hawkes(seed):
+    lambda0 = 0.47
+    a = 0.26
+    rho = 0.4
+    delta = 1
+
+    return simulate_num_dynamic_contagion_uniform_jumps(
+        seed, maturity, lambda0, a, rho, delta, 0.0, 1.0, 0.0, 0.0
+    )
+
+
+# Dynamic contagion process
+def simulate_dcp(seed):
+    lambda0 = 0.29
+    a = 0.26
+    rho = 0.4
+    delta = 1
+
+    return simulate_num_dynamic_contagion_uniform_jumps(
+        seed, maturity, lambda0, a, rho, delta, 0.0, 1.0, 0.0, 0.5
+    )
+
+
+# +
+# %%time
+# Catastrophe loss size distribution parameters
+mu_C = 2
+sigma_C = 0.5
+
+seed = 123
+
+C_T_poisson, num_cats_poisson = simulate_catastrophe_losses(
+    seed, R, simulate_poisson, mu_C, sigma_C
+)
+
+C_T_cox, num_cats_cox = simulate_catastrophe_losses(
+    seed, R, simulate_cox, mu_C, sigma_C
+)
+
+C_T_hawkes, num_cats_hawkes = simulate_catastrophe_losses(
+    seed, R, simulate_hawkes, mu_C, sigma_C
+)
+
+C_T_dcp, num_cats_dcp = simulate_catastrophe_losses(
+    seed, R, simulate_dcp, mu_C, sigma_C
+)
 # -
 
 print(
@@ -213,7 +290,7 @@ def plot_num_cats(num_cats_poisson, num_cats_cox, num_cats_hawkes, num_cats_dcp)
             np.min(num_cats_dcp),
         ]
     )
-    
+
     num_bins = int(max_cats - min_cats + 1)
 
     bins = np.linspace(min_cats, max_cats, num_bins + 1)
@@ -253,18 +330,174 @@ plt.savefig("num_catastrophe_hists.png")
 
 ROUNDING = 4
 
-prices_poisson = calculate_prices(V_T, L_T, int_r_t, C_T_poisson, markup).round(ROUNDING)
+prices_poisson = calculate_prices(V_T, L_T, int_r_t, C_T_poisson, markup).round(
+    ROUNDING
+)
 display(prices_poisson)
-print(prices_poisson.style.to_latex().replace("00 ", " ").replace("lrrrrrrr", "c|c|c|c|c|c|c|c"))
+print(
+    prices_poisson.style.to_latex()
+    .replace("00 ", " ")
+    .replace("lrrrrrrr", "c|c|c|c|c|c|c|c")
+)
 
 prices_cox = calculate_prices(V_T, L_T, int_r_t, C_T_cox, markup).round(ROUNDING)
 display(prices_cox)
-print(prices_cox.style.to_latex().replace("00 ", " ").replace("lrrrrrrr", "c|c|c|c|c|c|c|c"))
+print(
+    prices_cox.style.to_latex()
+    .replace("00 ", " ")
+    .replace("lrrrrrrr", "c|c|c|c|c|c|c|c")
+)
 
 prices_hawkes = calculate_prices(V_T, L_T, int_r_t, C_T_hawkes, markup).round(ROUNDING)
 display(prices_hawkes)
-print(prices_hawkes.style.to_latex().replace("00 ", " ").replace("lrrrrrrr", "c|c|c|c|c|c|c|c"))
+print(
+    prices_hawkes.style.to_latex()
+    .replace("00 ", " ")
+    .replace("lrrrrrrr", "c|c|c|c|c|c|c|c")
+)
 
 prices_dcp = calculate_prices(V_T, L_T, int_r_t, C_T_dcp, markup).round(ROUNDING)
 display(prices_dcp)
-print(prices_dcp.style.to_latex().replace("00 ", " ").replace("lrrrrrrr", "c|c|c|c|c|c|c|c"))
+print(
+    prices_dcp.style.to_latex()
+    .replace("00 ", " ")
+    .replace("lrrrrrrr", "c|c|c|c|c|c|c|c")
+)
+
+price_dcp = calculate_prices(V_T, L_T, int_r_t, C_T_dcp, markup, As=(20,), Ms=(90,))
+price_dcp
+
+# +
+# %%time
+prices = reinsurance_prices(
+    R,
+    seed,
+    maturity,
+    k,
+    lambda_r,
+    m,
+    phi_V,
+    sigma_V,
+    phi_L,
+    sigma_L,
+    upsilon,
+    V_0,
+    L_0,
+    r_0,
+    simulate_poisson,
+    mu_C,
+    sigma_C,
+    markup,
+)
+
+prices
+
+# +
+# %%time
+prices = reinsurance_prices(
+    R,
+    seed,
+    maturity,
+    k,
+    lambda_r,
+    m,
+    phi_V,
+    sigma_V,
+    phi_L,
+    sigma_L,
+    upsilon,
+    V_0,
+    L_0,
+    r_0,
+    (simulate_poisson, simulate_cox, simulate_hawkes, simulate_dcp),
+    mu_C,
+    sigma_C,
+    markup,
+    As=(10.0, 15.0, 20.0, 25.0, 30.0),
+    Ms=(60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0),
+)
+
+prices.shape
+# -
+
+# Tables 1 to 4
+cat_models = ("Poisson", "Cox", "Hawkes", "DCP")
+for c in range(4):
+    print(cat_models[c])
+    display(pd.DataFrame(prices[c]).round(4))
+
+# +
+# %%time
+prices = reinsurance_prices(
+    R,
+    seed,
+    maturity,
+    k,
+    lambda_r,
+    m,
+    phi_V,
+    sigma_V,
+    phi_L,
+    sigma_L,
+    upsilon,
+    tuple(int(scale * L_0) for scale in (1.1, 1.3, 1.5)),
+    L_0,
+    r_0,
+    simulate_dcp,
+    mu_C,
+    sigma_C,
+    markup,
+)
+
+prices.shape
+# -
+
+prices.round(4)
+
+# +
+from functools import partial
+
+
+def simulate_dcp_variations(seed, rho):
+    lambda0 = 0.29
+    a = 0.26
+    delta = 1
+
+    return simulate_num_dynamic_contagion_uniform_jumps(
+        seed, maturity, lambda0, a, rho, delta, 0.0, 1.0, 0.0, 0.5
+    )
+
+
+simulators = []
+
+for new_rho in (0.4, 3, 10, 20):
+    simulators.append(partial(simulate_dcp_variations, rho=new_rho))
+# -
+
+# %%time
+prices = reinsurance_prices(
+    R,
+    seed,
+    maturity,
+    k,
+    lambda_r,
+    m,
+    phi_V,
+    sigma_V,
+    phi_L,
+    sigma_L,
+    upsilon,
+    tuple(int(scale * L_0) for scale in (1.1, 1.3, 1.5)),
+    L_0,
+    r_0,
+    simulators,
+    mu_C,
+    sigma_C,
+    markup,
+)
+
+prices.shape
+
+prices.T
+
+
