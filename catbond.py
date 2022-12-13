@@ -21,15 +21,15 @@ def catbond_prices(
     V_0: float,
     L_0: float,
     r_0: float,
-    simulator: Callable[[int], int] | Tuple[Callable[[int], int]],
+    simulator: Callable[[int], int] | Tuple[Callable[[int], int], ...],
     mu_C: float,
     sigma_C: float,
     markup: float,
-    K: float | Tuple[float] = 0.0,
-    F: float | Tuple[float] = 100.0,
-    psi_fn: Callable[[float, float, float], float] = lambda C_T, K, F: np.minimum(
-        np.maximum(C_T - K, 0), F
-    ),
+    K: float = 0.0,
+    F: float = 100.0,
+    psi_fn: Callable[
+        [np.ndarray, float, float], np.ndarray
+    ] = lambda C_T, K, F: np.minimum(np.maximum(C_T - K, 0), F),
 ) -> np.ndarray:
     """Calculate catbond prices using Monte Carlo simulation.
 
@@ -88,30 +88,23 @@ def catbond_prices(
 
     discounted_bond_payouts = np.mean(np.exp(-int_r_t) * F)
 
-    for c, simulator in enumerate(simulators):
+    for s in range(len(simulators)):
 
         C_T, _ = simulate_catastrophe_losses(
             seed + 1,
             R,
-            simulator,
+            simulators[s],
             mu_C,
             sigma_C,
         )
 
-        catbond_payouts = np.empty(R, dtype=float)
-        for r in range(R):
-            catbond_payouts[r] = F - psi_fn(C_T[r], K, F)
-
+        catbond_payouts = F - psi_fn(C_T, K, F)
         discounted_catbond_payouts = np.exp(-int_r_t) * catbond_payouts
-
         delta_0 = np.mean(discounted_bond_payouts) - np.mean(discounted_catbond_payouts)
-        prices[c] = (1 + markup) * delta_0
 
-    prices = prices.squeeze()
-    if not prices.shape:
-        prices = float(prices)
+        prices[s] = (1 + markup) * delta_0
 
-    return prices
+    return prices.squeeze()
 
 
 def net_present_value(
@@ -129,16 +122,16 @@ def net_present_value(
     V_0: float,
     L_0: float,
     r_0: float,
-    simulator: Callable[[int], int] | Tuple[Callable[[int], int]],
+    simulator: Callable[[int], int] | Tuple[Callable[[int], int], ...],
     mu_C: float,
     sigma_C: float,
     markup: float,
     catbond_markup: float,
     K: float = 0.0,
     F: float = 100.0,
-    psi_fn: Callable[[float, float, float], float] = lambda C_T, K, F: np.minimum(
-        np.maximum(C_T - K, 0), F
-    ),
+    psi_fn: Callable[
+        [np.ndarray, float, float], np.ndarray
+    ] = lambda C_T, K, F: np.minimum(np.maximum(C_T - K, 0), F),
 ) -> np.ndarray:
     """The reinsurer's net present value.
 
@@ -175,7 +168,7 @@ def net_present_value(
 
     npvs = np.zeros((len(simulators)))
 
-    for c, simulator in enumerate(simulators):
+    for s in range(len(simulators)):
         reinsurance_pv = reinsurance_prices(
             R,
             seed,
@@ -191,7 +184,7 @@ def net_present_value(
             V_0,
             L_0,
             r_0,
-            simulator,
+            simulators[s],
             mu_C,
             sigma_C,
             markup=0.0,
@@ -215,7 +208,7 @@ def net_present_value(
             V_0,
             L_0,
             r_0,
-            simulator,
+            simulators[s],
             mu_C,
             sigma_C,
             markup=0.0,
@@ -224,13 +217,9 @@ def net_present_value(
             psi_fn=psi_fn,
         )
 
-        npvs[c] = markup * reinsurance_pv - catbond_markup * delta_0
+        npvs[s] = markup * reinsurance_pv - catbond_markup * delta_0
 
-    npvs = npvs.squeeze()
-    if not npvs.shape:
-        npvs = float(npvs)
-
-    return npvs
+    return npvs.squeeze()
 
 
 def total_hedging_cost(
@@ -248,7 +237,7 @@ def total_hedging_cost(
     V_0: float,
     L_0: float,
     r_0: float,
-    simulator: Callable[[int], int] | Tuple[Callable[[int], int]],
+    simulator: Callable[[int], int] | Tuple[Callable[[int], int], ...],
     mu_C: float,
     sigma_C: float,
     markup: float,
@@ -257,9 +246,9 @@ def total_hedging_cost(
     F_ins: float = 100.0,
     K_reins: float = 0.0,
     F_reins: float = 100.0,
-    psi_fn: Callable[[float, float, float], float] = lambda C_T, K, F: np.minimum(
-        np.maximum(C_T - K, 0), F
-    ),
+    psi_fn: Callable[
+        [np.ndarray, float, float], np.ndarray
+    ] = lambda C_T, K, F: np.minimum(np.maximum(C_T - K, 0), F),
 ) -> np.ndarray:
     """The insurer's total hedging cost (the sum of the reinsurance price and the catbond price).
 
@@ -291,7 +280,7 @@ def total_hedging_cost(
 
 
     Returns:
-        A dataframe of floats containing the calculated total hedging costs.
+        A numpy array of the insurer's total hedging costs.
     """
 
     reinsurance_pv = reinsurance_prices(

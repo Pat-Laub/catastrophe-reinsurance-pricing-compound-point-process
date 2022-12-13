@@ -139,13 +139,14 @@ reinsurance_prices_with_catbonds = reinsurance_prices(
 # +
 names = ("Poisson", "Cox", "Hawkes", "DCP")
 
+Fs = np.array([0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0])
+X = np.array([F / L_0 for F in Fs])
+Y = np.array([20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0])
+X, Y = np.meshgrid(X, Y)
+
 for i, name in enumerate(names):
     print(name)
 
-    Fs = (0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0)
-    X = tuple(F / L_0 for F in Fs)
-    Y = (20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0)
-    X, Y = np.meshgrid(X, Y)
     Z = reinsurance_prices_with_catbonds[i]
 
     # Plot a colourful 3D surface
@@ -169,11 +170,6 @@ for i, name in enumerate(names):
 fig = plt.figure()
 ax1 = fig.add_subplot(121, projection="3d")
 ax2 = fig.add_subplot(122, projection="3d")
-
-Fs = (0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0)
-X = tuple(F / L_0 for F in Fs)
-Y = (20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0)
-X, Y = np.meshgrid(X, Y)
 
 # Plot the first subplot
 for i in (0, 3):
@@ -201,11 +197,6 @@ plt.savefig("poisson-dcp.png", dpi=300, bbox_inches="tight")
 fig = plt.figure()
 ax1 = fig.add_subplot(121, projection="3d")
 ax2 = fig.add_subplot(122, projection="3d")
-
-Fs = (0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0)
-X = tuple(F / L_0 for F in Fs)
-Y = (20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0)
-X, Y = np.meshgrid(X, Y)
 
 # Plot the first subplot
 for i in (1, 2):

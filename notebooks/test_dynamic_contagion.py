@@ -46,7 +46,7 @@ np.mean(N_T), np.var(N_T)
 # +
 # %%time
 # Cox proces
-def simulate_cox(rg):
+def simulate_cox_slow(rg):
     lambda0 = 0.49
     a = 0.4
     rho = 0.4
@@ -62,7 +62,7 @@ def simulate_cox(rg):
 
 seed = 123
 rg = np.random.default_rng(seed)
-N_T = [simulate_cox(rg) for _ in range(R)]
+N_T = [simulate_cox_slow(rg) for _ in range(R)]
 np.mean(N_T), np.var(N_T)
 
 
@@ -88,7 +88,7 @@ np.mean(N_T), np.var(N_T)
 # +
 # %%time
 # Hawkes process
-def simulate_hawkes(rg):
+def simulate_hawkes_slow(rg):
     lambda0 = 0.47
     a = 0.26
     rho = 0.4
@@ -103,7 +103,7 @@ def simulate_hawkes(rg):
 
 
 rg = np.random.default_rng(123)
-N_T = [simulate_hawkes(rg) for _ in range(R)]
+N_T = [simulate_hawkes_slow(rg) for _ in range(R)]
 np.mean(N_T), np.var(N_T)
 
 
@@ -129,7 +129,7 @@ np.mean(N_T), np.var(N_T)
 # +
 # %%time
 # Dynamic contagion process
-def simulate_dcp(rg):
+def simulate_dcp_slow(rg):
     lambda0 = 0.29
     a = 0.26
     rho = 0.4
@@ -144,7 +144,7 @@ def simulate_dcp(rg):
 
 
 rg = np.random.default_rng(123)
-N_T = [simulate_dcp(rg) for _ in range(R)]
+N_T = [simulate_dcp_slow(rg) for _ in range(R)]
 np.mean(N_T), np.var(N_T)
 
 

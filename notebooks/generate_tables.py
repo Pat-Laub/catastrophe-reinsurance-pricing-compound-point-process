@@ -129,15 +129,12 @@ prices = reinsurance_prices(
     mu_C,
     sigma_C,
     markup,
-    As=(10.0, 15.0, 20.0, 25.0, 30.0),
-    Ms=(60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0),
+    A=(10.0, 15.0, 20.0, 25.0, 30.0),
+    M=(60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0),
 )
 
 prices.shape
 # -
-
-df = pd.DataFrame(prices[c])
-df.index = ["$A=10$", "$A=15$", "$A=20$", "$A=25$", "$A=30$"]
 
 # Tables 1 to 4
 cat_models = ("Poisson", "Cox", "Hawkes", "DCP")

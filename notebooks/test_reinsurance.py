@@ -82,14 +82,14 @@ assert np.isnan(all_time_series).mean() == 0
 
 # +
 # Poisson process
-def simulate_poisson(seed):
+def simulate_poisson_slow(seed):
     lambda_ = 0.5
     rg = rnd.default_rng(seed)
     return rg.poisson(lambda_ * maturity)
 
 
 # Cox proces
-def simulate_cox(seed):
+def simulate_cox_slow(seed):
     lambda0 = 0.49
     a = 0.4
     rho = 0.4
@@ -105,7 +105,7 @@ def simulate_cox(seed):
 
 
 # Hawkes process
-def simulate_hawkes(seed):
+def simulate_hawkes_slow(seed):
     lambda0 = 0.47
     a = 0.26
     rho = 0.4
@@ -121,7 +121,7 @@ def simulate_hawkes(seed):
 
 
 # Dynamic contagion process
-def simulate_dcp(seed):
+def simulate_dcp_slow(seed):
     lambda0 = 0.29
     a = 0.26
     rho = 0.4
@@ -145,19 +145,19 @@ sigma_C = 0.5
 seed = 123
 
 C_T_poisson, num_cats_poisson = simulate_catastrophe_losses(
-    seed, R, simulate_poisson, mu_C, sigma_C
+    seed, R, simulate_poisson_slow, mu_C, sigma_C
 )
 
 C_T_cox, num_cats_cox = simulate_catastrophe_losses(
-    seed, R, simulate_cox, mu_C, sigma_C
+    seed, R, simulate_cox_slow, mu_C, sigma_C
 )
 
 C_T_hawkes, num_cats_hawkes = simulate_catastrophe_losses(
-    seed, R, simulate_hawkes, mu_C, sigma_C
+    seed, R, simulate_hawkes_slow, mu_C, sigma_C
 )
 
 C_T_dcp, num_cats_dcp = simulate_catastrophe_losses(
-    seed, R, simulate_dcp, mu_C, sigma_C
+    seed, R, simulate_dcp_slow, mu_C, sigma_C
 )
 
 

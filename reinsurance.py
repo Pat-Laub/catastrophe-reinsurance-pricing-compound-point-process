@@ -9,7 +9,7 @@ from market_conditions import get_market_conditions, summarise_market_conditions
 
 
 @njit()
-def payout_without_default(C_T: np.ndarray, A: float, M: float) -> float:
+def payout_without_default(C_T: np.ndarray, A: float, M: float) -> np.ndarray:
     """Calculate the payout assuming the reinsurer cannot default for catastrophe losses.
 
     Args:
@@ -40,7 +40,7 @@ def payout_without_default(C_T: np.ndarray, A: float, M: float) -> float:
 @njit()
 def payout_with_default(
     V_T: np.ndarray, L_T: np.ndarray, C_T: np.ndarray, A: float, M: float
-) -> float:
+) -> np.ndarray:
     """Calculate the payout given the final value of assets, liabilities, and catastrophe losses.
 
     Args:
@@ -132,9 +132,9 @@ def calculate_prices(
     int_r_t: np.ndarray,
     C_T: np.ndarray,
     markup: float,
-    A: Tuple[float] = (10.0, 15.0, 20.0, 25.0, 30.0),
-    M: Tuple[float] = (60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0),
-) -> pd.DataFrame | float:
+    A: float | Tuple[float, ...] = (10.0, 15.0, 20.0, 25.0, 30.0),
+    M: float | Tuple[float, ...] = (60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0),
+) -> np.ndarray:
     """Calculate prices for reinsurance contracts at various attachment and cap levels.
 
     Args:
@@ -153,9 +153,9 @@ def calculate_prices(
     Ms = make_iterable(M)
 
     prices = np.zeros((len(As), len(Ms)))
-    for i, A in enumerate(As):
-        for j, M in enumerate(Ms):
-            payouts = payout_with_default(V_T, L_T, C_T, A, M)
+    for i in range(len(As)):
+        for j in range(len(Ms)):
+            payouts = payout_with_default(V_T, L_T, C_T, As[i], Ms[j])
             discounted_payouts = np.exp(-int_r_t) * payouts
             prices[i][j] = (1 + markup) * np.mean(discounted_payouts)
 
@@ -174,22 +174,22 @@ def reinsurance_prices(
     phi_L: float,
     sigma_L: float,
     upsilon: float,
-    V_0: float | Tuple[float],
+    V_0: float | Tuple[float, ...],
     L_0: float,
     r_0: float,
-    simulator: Tuple[Callable[[int], int]],
+    simulator: Callable[[int], int] | Tuple[Callable[[int], int], ...],
     mu_C: float,
     sigma_C: float,
     markup: float,
-    A: float | Tuple[float] = 20.0,
-    M: float | Tuple[float] = 90.0,
+    A: float | Tuple[float, ...] = 20.0,
+    M: float | Tuple[float, ...] = 90.0,
     defaultable: bool = True,
     catbond: bool = False,
-    K: float | Tuple[float] = 40.0,
-    F: float | Tuple[float] = 10.0,
-    psi_fn: Callable[[float, float, float], float] = lambda C_T, K, F: np.minimum(
-        np.maximum(C_T - K, 0), F
-    ),
+    K: float | Tuple[float, ...] = 40.0,
+    F: float | Tuple[float, ...] = 10.0,
+    psi_fn: Callable[
+        [np.ndarray, float, float], np.ndarray
+    ] = lambda C_T, K, F: np.minimum(np.maximum(C_T - K, 0), F),
 ) -> np.ndarray:
     """Calculate reinsurance prices using Monte Carlo simulation.
 
@@ -236,7 +236,9 @@ def reinsurance_prices(
 
     prices = np.zeros((len(V_0s), len(simulators), len(As), len(Ms), len(Ks), len(Fs)))
 
-    for v, V_0 in enumerate(V_0s):
+    kappa = k
+
+    for v in range(len(V_0s)):
 
         # If calculating the default-free price, then the initial value of the assets
         # has no effect on the price, so we can just duplicate the prices.
@@ -248,7 +250,7 @@ def reinsurance_prices(
             R,
             seed,
             maturity,
-            k,
+            kappa,
             eta_r,
             m,
             phi_V,
@@ -256,44 +258,46 @@ def reinsurance_prices(
             phi_L,
             sigma_L,
             upsilon,
-            V_0,
+            V_0s[v],
             L_0,
             r_0,
         )
 
         V_T, L_T, int_r_t = summarise_market_conditions(all_time_series, maturity)
 
-        for c, simulator in enumerate(simulators):
+        for s in range(len(simulators)):
 
             C_T, _ = simulate_catastrophe_losses(
                 seed + 1,
                 R,
-                simulator,
+                simulators[s],
                 mu_C,
                 sigma_C,
             )
 
-            for i, A in enumerate(As):
-                for j, M in enumerate(Ms):
-                    for k, K in enumerate(Ks):
-                        for f, F in enumerate(Fs):
+            for i in range(len(As)):
+                for j in range(len(Ms)):
+                    for k in range(len(Ks)):
+                        for f in range(len(Fs)):
                             if catbond:
-                                psi_T = psi_fn(C_T, K, F)
+                                psi_T = psi_fn(C_T, Ks[k], Fs[f])
                                 payouts = payout_with_default(
                                     V_T + psi_T,
                                     L_T,
                                     C_T,
-                                    A,
-                                    M,
+                                    As[i],
+                                    Ms[j],
                                 )
                             elif defaultable:
-                                payouts = payout_with_default(V_T, L_T, C_T, A, M)
+                                payouts = payout_with_default(
+                                    V_T, L_T, C_T, As[i], Ms[j]
+                                )
                             else:
-                                payouts = payout_without_default(C_T, A, M)
+                                payouts = payout_without_default(C_T, As[i], Ms[j])
 
                             discounted_payouts = np.exp(-int_r_t) * payouts
 
-                            prices[v, c, i, j, k, f] = (1 + markup) * np.mean(
+                            prices[v, s, i, j, k, f] = (1 + markup) * np.mean(
                                 discounted_payouts
                             )
 
