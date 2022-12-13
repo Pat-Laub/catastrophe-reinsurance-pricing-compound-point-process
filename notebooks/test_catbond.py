@@ -364,13 +364,7 @@ delta_0 = catbond_prices(
     k,
     eta_r,
     m,
-    phi_V,
-    sigma_V,
-    phi_L,
-    sigma_L,
     upsilon,
-    V_0,
-    L_0,
     r_0,
     simulate_poisson,
     mu_C,
@@ -425,13 +419,7 @@ free_bond = catbond_prices(
     k,
     eta_r,
     m,
-    phi_V,
-    sigma_V,
-    phi_L,
-    sigma_L,
     upsilon,
-    V_0,
-    L_0,
     r_0,
     simulate_poisson,
     mu_C,
@@ -444,10 +432,10 @@ free_bond = catbond_prices(
 free_bond
 
 # +
-face_values = np.linspace(0.0, 2, 5)
-deltas = np.empty_like(face_values)
+Fs = np.linspace(0.0, 2, 5)
+deltas = np.empty_like(Fs)
 
-for i, face_value in enumerate(face_values):
+for i, F in enumerate(Fs):
     deltas[i] = catbond_prices(
         R,
         seed,
@@ -455,20 +443,14 @@ for i, face_value in enumerate(face_values):
         k,
         eta_r,
         m,
-        phi_V,
-        sigma_V,
-        phi_L,
-        sigma_L,
         upsilon,
-        V_0,
-        L_0,
         r_0,
         simulate_poisson,
         mu_C,
         sigma_C,
         markup=0.0,
         K=10.0,
-        F=face_value,
+        F=F,
     )
 # -
 

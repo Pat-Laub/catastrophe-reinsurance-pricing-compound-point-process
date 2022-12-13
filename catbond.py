@@ -13,13 +13,7 @@ def catbond_prices(
     k: float,
     eta_r: float,
     m: float,
-    phi_V: float,
-    sigma_V: float,
-    phi_L: float,
-    sigma_L: float,
     upsilon: float,
-    V_0: float,
-    L_0: float,
     r_0: float,
     simulator: Callable[[int], int] | Tuple[Callable[[int], int], ...],
     mu_C: float,
@@ -40,13 +34,7 @@ def catbond_prices(
         k: Mean-reversion parameter for the interest rate process.
         eta_r: The market price of interest rate risk.
         m: Long-run mean of the interest rate process.
-        phi_V: Interest rate elasticity of the assets.
-        sigma_V: Volatility of credit risk.
-        phi_L: Interest rate elasticity of liability process.
-        sigma_L: Volatility of idiosyncratic risk.
         upsilon: Volatility of the interest rate process.
-        V_0: The initial value of the reinsurer's assets.
-        L_0: The initial value of the reinsurer's liabilities.
         r_0: The initial value of instantaneous interest rate.
         simulator: A function which simulates the number of natural catastrophes.
         mu_C: The mean of the lognormal distribution of catastrophe losses.
@@ -67,24 +55,18 @@ def catbond_prices(
 
     prices = np.zeros((len(simulators), len(Ks), len(Fs)))
 
-    all_time_series = get_market_conditions(
+    interest_rates = load_interest_rates(
         R,
         seed,
         maturity,
         k,
         eta_r,
         m,
-        phi_V,
-        sigma_V,
-        phi_L,
-        sigma_L,
         upsilon,
-        V_0,
-        L_0,
         r_0,
     )
 
-    _, _, int_r_t = summarise_market_conditions(all_time_series, maturity)
+    int_r_t = integrated_interest_rates(interest_rates, maturity)
 
     discounted_bond_payouts = np.mean(np.exp(-int_r_t) * F)
 
@@ -200,13 +182,7 @@ def net_present_value(
             k,
             eta_r,
             m,
-            phi_V,
-            sigma_V,
-            phi_L,
-            sigma_L,
             upsilon,
-            V_0,
-            L_0,
             r_0,
             simulators[s],
             mu_C,
@@ -315,13 +291,7 @@ def total_hedging_cost(
         k,
         eta_r,
         m,
-        phi_V,
-        sigma_V,
-        phi_L,
-        sigma_L,
         upsilon,
-        V_0,
-        L_0,
         r_0,
         simulator,
         mu_C,

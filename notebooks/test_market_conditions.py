@@ -84,3 +84,9 @@ plt.hist(int_r_t, 30, label="Interest rates (integrated)")
 plt.axvline(r_0, c="r", ls="--")
 plt.legend()
 plt.show()
+# -
+
+rates = load_interest_rates(R, seed, maturity, k, eta_r, m, upsilon, r_0)
+rates
+
+assert np.allclose(rates, all_time_series[:, :, 2])
