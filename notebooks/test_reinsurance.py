@@ -332,41 +332,43 @@ plt.savefig("num_catastrophe_hists.png")
 
 # ## Tables 1-4 (LaTeX)
 
+# +
 ROUNDING = 4
 
-prices_poisson = calculate_prices(V_T, L_T, int_r_t, C_T_poisson, markup).round(
-    ROUNDING
-)
-display(prices_poisson)
-print(
-    prices_poisson.style.to_latex()
-    .replace("00 ", " ")
-    .replace("lrrrrrrr", "c|c|c|c|c|c|c|c")
-)
+As = (10.0, 15.0, 20.0, 25.0, 30.0)
+Ms = (60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0)
 
-prices_cox = calculate_prices(V_T, L_T, int_r_t, C_T_cox, markup).round(ROUNDING)
-display(prices_cox)
-print(
-    prices_cox.style.to_latex()
-    .replace("00 ", " ")
-    .replace("lrrrrrrr", "c|c|c|c|c|c|c|c")
-)
 
-prices_hawkes = calculate_prices(V_T, L_T, int_r_t, C_T_hawkes, markup).round(ROUNDING)
-display(prices_hawkes)
-print(
-    prices_hawkes.style.to_latex()
-    .replace("00 ", " ")
-    .replace("lrrrrrrr", "c|c|c|c|c|c|c|c")
-)
+def prices_to_tex(prices, As, Ms):
+    try:
+        cols = [f"$M={int(m)}$" for m in Ms]
+        rows = [f"$A={int(a)}$" for a in As]
+    except ValueError:
+        cols = [f"$M={m}$" for m in Ms]
+        rows = [f"$A={a}$" for a in As]
 
-prices_dcp = calculate_prices(V_T, L_T, int_r_t, C_T_dcp, markup).round(ROUNDING)
-display(prices_dcp)
-print(
-    prices_dcp.style.to_latex()
-    .replace("00 ", " ")
-    .replace("lrrrrrrr", "c|c|c|c|c|c|c|c")
-)
+    df = pd.DataFrame(prices.round(ROUNDING), columns=cols, index=rows)
+
+    display(df)
+
+    return (
+        df.style.to_latex().replace("00 ", " ").replace("lrrrrrrr", "c|c|c|c|c|c|c|c")
+    )
+
+
+# -
+
+prices_poisson = calculate_prices(V_T, L_T, int_r_t, C_T_poisson, markup)
+print(prices_to_tex(prices_poisson, As, Ms))
+
+prices_cox = calculate_prices(V_T, L_T, int_r_t, C_T_cox, markup)
+print(prices_to_tex(prices_cox, As, Ms))
+
+prices_hawkes = calculate_prices(V_T, L_T, int_r_t, C_T_hawkes, markup)
+print(prices_to_tex(prices_hawkes, As, Ms))
+
+prices_dcp = calculate_prices(V_T, L_T, int_r_t, C_T_dcp, markup)
+print(prices_to_tex(prices_dcp, As, Ms))
 
 price_dcp = calculate_prices(V_T, L_T, int_r_t, C_T_dcp, markup, A=20, M=90)
 price_dcp
@@ -388,7 +390,7 @@ prices = reinsurance_prices(
     V_0,
     L_0,
     r_0,
-    simulate_poisson,
+    simulate_dcp,
     mu_C,
     sigma_C,
     markup,

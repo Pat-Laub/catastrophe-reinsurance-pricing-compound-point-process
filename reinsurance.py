@@ -3,11 +3,13 @@ from typing import Callable, Tuple
 import numpy as np
 import numpy.random as rnd
 import pandas as pd
+from numba import njit
 
 from market_conditions import get_market_conditions, summarise_market_conditions
 
 
-def payout_without_default(C_T: float, A: float, M: float) -> float:
+@njit()
+def payout_without_default(C_T: np.ndarray, A: float, M: float) -> float:
     """Calculate the payout assuming the reinsurer cannot default for catastrophe losses.
 
     Args:
@@ -19,19 +21,25 @@ def payout_without_default(C_T: float, A: float, M: float) -> float:
         The payout given the simulated catastrophe losses.
     """
 
-    if C_T >= M:
-        # The reinsurance contract has hit the detachment point.
-        return M - A
-    elif M > C_T and C_T >= A:
-        # The reinsurance contract has not hit detachment point.
-        return C_T - A
-    else:
-        # The catastrophe losses were not large enough to trigger the contract.
-        return 0
+    payouts = np.empty_like(C_T)
+
+    for r in range(len(C_T)):
+        if C_T[r] >= M:
+            # The reinsurance contract has hit the detachment point.
+            payouts[r] = M - A
+        elif M > C_T[r] and C_T[r] >= A:
+            # The reinsurance contract has not hit detachment point.
+            payouts[r] = C_T[r] - A
+        else:
+            # The catastrophe losses were not large enough to trigger the contract.
+            payouts[r] = 0
+
+    return payouts
 
 
+@njit()
 def payout_with_default(
-    V_T: float, L_T: float, C_T: float, A: float, M: float
+    V_T: np.ndarray, L_T: np.ndarray, C_T: np.ndarray, A: float, M: float
 ) -> float:
     """Calculate the payout given the final value of assets, liabilities, and catastrophe losses.
 
@@ -46,79 +54,36 @@ def payout_with_default(
         The payout given the final value of assets, liabilities, and catastrophe losses.
     """
 
-    if C_T >= M and V_T >= L_T + M - A:
-        # The reinsurance contract has hit the detachment point
-        # and the reinsurer has enough assets to pay out.
-        return M - A
-    elif C_T >= M and V_T < L_T + M - A:
-        # The reinsurance contract has hit the detachment point
-        # but the reinsurer does not have enough assets to pay out the full amount.
-        return (M - A) * V_T / (L_T + M - A)
-    elif M > C_T and C_T >= A and V_T >= L_T + C_T - A:
-        # The reinsurance contract has not hit detachment point
-        # and the reinsurer has enough assets to pay out.
-        return C_T - A
-    elif M > C_T and C_T >= A and V_T < L_T + C_T - A:
-        # The reinsurance contract has not hit detachment point
-        # but the reinsurer does not have enough assets to pay out.
-        return (C_T - A) * V_T / (L_T + C_T - A)
-    else:
-        # The catastrophe losses were not large enough to trigger the contract.
-        return 0
+    payouts = np.empty_like(C_T)
 
+    for r in range(len(C_T)):
+        if C_T[r] >= M and V_T[r] >= L_T[r] + M - A:
+            # The reinsurance contract has hit the detachment point
+            # and the reinsurer has enough assets to pay out.
+            payouts[r] = M - A
+        elif C_T[r] >= M and V_T[r] < L_T[r] + M - A:
+            # The reinsurance contract has hit the detachment point
+            # but the reinsurer does not have enough assets to pay out the full amount.
+            payouts[r] = (M - A) * V_T[r] / (L_T[r] + M - A)
+        elif M > C_T[r] and C_T[r] >= A and V_T[r] >= L_T[r] + C_T[r] - A:
+            # The reinsurance contract has not hit detachment point
+            # and the reinsurer has enough assets to pay out.
+            payouts[r] = C_T[r] - A
+        elif M > C_T[r] and C_T[r] >= A and V_T[r] < L_T[r] + C_T[r] - A:
+            # The reinsurance contract has not hit detachment point
+            # but the reinsurer does not have enough assets to pay out.
+            payouts[r] = (C_T[r] - A) * V_T[r] / (L_T[r] + C_T[r] - A)
+        else:
+            # The catastrophe losses were not large enough to trigger the contract.
+            payouts[r] = 0
 
-def payout_with_default_and_catbond(
-    V_T: float, L_T: float, C_T: float, A: float, M: float, K: float, psi_T: float
-) -> float:
-    """Calculate the payout given the final value of assets, liabilities, and catastrophe losses.
-
-    Args:
-        V_T: The value of the reinsurer's assets at maturity time T.
-        L_T: The value of the reinsurer's liabilities at terminal time T.
-        C_T: The value of the catastrophe losses at terminal time T.
-        A: The attachment point specified in the reinsurance contract.
-        M: The reinsurance cap (i.e. detachment point).
-        K: The catastrophe bond strike price.
-        psi_T: The catastrophe bond payout.
-
-    Returns:
-        The payout given the final value of assets, liabilities, and catastrophe losses.
-    """
-    assert A <= K and K <= M
-
-    if C_T >= M and V_T + psi_T >= L_T + M - A:
-        # The reinsurance contract has hit the detachment point
-        # and the reinsurer has enough assets (after catbond kicks in) to pay out.
-        return M - A
-    elif C_T >= M and V_T + psi_T < L_T + M - A:
-        # The reinsurance contract has hit the detachment point but the
-        # reinsurer doesn't have enough assets (even with the catbond) to pay in full.
-        return (M - A) * (V_T + psi_T) / (L_T + M - A)
-    elif M > C_T and C_T >= A and V_T >= L_T + C_T - A and C_T < K:
-        # The reinsurance contract has not hit detachment point
-        # and the reinsurer has enough assets (without catbond) to pay out.
-        return C_T - A
-    elif M > C_T and C_T >= A and V_T + psi_T >= L_T + C_T - A and C_T >= K:
-        # The reinsurance contract has not hit detachment point
-        # and the reinsurer has enough assets (with catbond) to pay out.
-        return C_T - A
-    elif M > C_T and C_T >= A and V_T < L_T + C_T - A and C_T < K:
-        # The reinsurance contract has not hit detachment point
-        # but the reinsurer does not have enough assets (without catbond) to pay out.
-        return (C_T - A) * V_T / (L_T + C_T - A)
-    elif M > C_T and C_T >= A and V_T + psi_T < L_T + C_T - A and C_T >= K:
-        # The reinsurance contract has not hit detachment point
-        # but the reinsurer does not have enough assets (even with catbond) to pay out.
-        return (C_T - A) * (V_T + psi_T) / (L_T + C_T - A)
-    else:
-        # The catastrophe losses were not large enough to trigger the contract.
-        return 0
+    return payouts
 
 
 def simulate_catastrophe_losses(
     seed: int,
     R: int,
-    simulate_num_catastrophes: Callable[[int], int],
+    simulator: Callable[[int], int],
     mu_C: float,
     sigma_C: float,
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -127,7 +92,7 @@ def simulate_catastrophe_losses(
     Args:
         seed: The seed for the random number generator.
         R: Number of Monte Carlo samples to generate.
-        simulate_num_catastrophes: A function which simulates the number of catastrophes.
+        simulator: A function which simulates the number of catastrophes.
         mu_C: The mean of the lognormal distribution of catastrophe losses.
         sigma_C: The standard deviation of the lognormal distribution of catastrophe losses.
 
@@ -140,7 +105,7 @@ def simulate_catastrophe_losses(
     C_T = np.empty(R, dtype=float)
 
     for i in range(R):
-        num_catastrophes[i] = simulate_num_catastrophes(seeds[i])
+        num_catastrophes[i] = simulator(seeds[i])
         C_T[i] = np.sum(rg.lognormal(mu_C, sigma_C, size=num_catastrophes[i]))
 
     return C_T, num_catastrophes
@@ -182,38 +147,19 @@ def calculate_prices(
         M: A tuple of floats containing the caps to consider.
 
     Returns:
-        A dataframe of floats containing the calculated prices of reinsurance contracts.
-        Exceptionally, if the length of A and M is 1, then a float is returned.
+        A numpy array of floats containing the calculated prices of reinsurance contracts.
     """
     As = make_iterable(A)
     Ms = make_iterable(M)
 
-    R = len(V_T)
     prices = np.zeros((len(As), len(Ms)))
     for i, A in enumerate(As):
         for j, M in enumerate(Ms):
-
-            payouts = np.empty(R, dtype=float)
-            for r in range(R):
-                payouts[r] = payout_with_default(V_T[r], L_T[r], C_T[r], A, M)
-
+            payouts = payout_with_default(V_T, L_T, C_T, A, M)
             discounted_payouts = np.exp(-int_r_t) * payouts
-
             prices[i][j] = (1 + markup) * np.mean(discounted_payouts)
 
-    if len(As) == 1 and len(Ms) == 1:
-        return prices[0][0]
-
-    try:
-        cols = [f"$M={int(m)}$" for m in Ms]
-        rows = [f"$A={int(a)}$" for a in As]
-    except ValueError:
-        cols = [f"$M={m}$" for m in Ms]
-        rows = [f"$A={a}$" for a in As]
-
-    df = pd.DataFrame(prices, columns=cols, index=rows)
-
-    return df
+    return prices
 
 
 def reinsurance_prices(
@@ -241,8 +187,8 @@ def reinsurance_prices(
     catbond: bool = False,
     K: float | Tuple[float] = 40.0,
     F: float | Tuple[float] = 10.0,
-    psi_T: Callable[[float, float, float], float] = lambda C_T, K, F_cat: np.minimum(
-        np.maximum(C_T - K, 0), F_cat
+    psi_fn: Callable[[float, float, float], float] = lambda C_T, K, F: np.minimum(
+        np.maximum(C_T - K, 0), F
     ),
 ) -> np.ndarray:
     """Calculate reinsurance prices using Monte Carlo simulation.
@@ -272,11 +218,11 @@ def reinsurance_prices(
         catbond: Whether or not the reinsurer has issued a catastrophe bond.
         K: The strike price of the catastrophe bond.
         F: The face value of the catastrophe bond.
-        psi_T: The catastrophe bond trigger function.
+        psi_fn: The catastrophe bond trigger function.
 
 
     Returns:
-        A dataframe of floats containing the calculated prices of reinsurance contracts.
+        A numpy array of floats containing the calculated prices of reinsurance contracts.
     """
 
     assert not (catbond and not defaultable), "A catbond must be defaultable."
@@ -331,25 +277,19 @@ def reinsurance_prices(
                 for j, M in enumerate(Ms):
                     for k, K in enumerate(Ks):
                         for f, F in enumerate(Fs):
-
-                            payouts = np.empty(R, dtype=float)
-                            for r in range(R):
-                                if catbond:
-                                    payouts[r] = payout_with_default_and_catbond(
-                                        V_T[r],
-                                        L_T[r],
-                                        C_T[r],
-                                        A,
-                                        M,
-                                        K,
-                                        psi_T(C_T[r], K, F),
-                                    )
-                                elif defaultable:
-                                    payouts[r] = payout_with_default(
-                                        V_T[r], L_T[r], C_T[r], A, M
-                                    )
-                                else:
-                                    payouts[r] = payout_without_default(C_T[r], A, M)
+                            if catbond:
+                                psi_T = psi_fn(C_T, K, F)
+                                payouts = payout_with_default(
+                                    V_T + psi_T,
+                                    L_T,
+                                    C_T,
+                                    A,
+                                    M,
+                                )
+                            elif defaultable:
+                                payouts = payout_with_default(V_T, L_T, C_T, A, M)
+                            else:
+                                payouts = payout_without_default(C_T, A, M)
 
                             discounted_payouts = np.exp(-int_r_t) * payouts
 
@@ -357,8 +297,4 @@ def reinsurance_prices(
                                 discounted_payouts
                             )
 
-    prices = prices.squeeze()
-    if not prices.shape:
-        prices = float(prices)
-
-    return prices
+    return prices.squeeze()

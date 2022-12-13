@@ -27,7 +27,7 @@ def catbond_prices(
     markup: float,
     K: float | Tuple[float] = 0.0,
     F: float | Tuple[float] = 100.0,
-    psi_T: Callable[[float, float, float], float] = lambda C_T, K, F: np.minimum(
+    psi_fn: Callable[[float, float, float], float] = lambda C_T, K, F: np.minimum(
         np.maximum(C_T - K, 0), F
     ),
 ) -> np.ndarray:
@@ -54,7 +54,7 @@ def catbond_prices(
         markup: The markup on the reinsurance contract.
         K: The strike price of the catastrophe bond.
         F: The face value of the catastrophe bond.
-        psi_T: The catastrophe bond trigger function.
+        psi_fn: The catastrophe bond trigger function.
 
 
     Returns:
@@ -100,7 +100,7 @@ def catbond_prices(
 
         catbond_payouts = np.empty(R, dtype=float)
         for r in range(R):
-            catbond_payouts[r] = F - psi_T(C_T[r], K, F)
+            catbond_payouts[r] = F - psi_fn(C_T[r], K, F)
 
         discounted_catbond_payouts = np.exp(-int_r_t) * catbond_payouts
 
@@ -136,7 +136,7 @@ def net_present_value(
     catbond_markup: float,
     K: float = 0.0,
     F: float = 100.0,
-    psi_T: Callable[[float, float, float], float] = lambda C_T, K, F: np.minimum(
+    psi_fn: Callable[[float, float, float], float] = lambda C_T, K, F: np.minimum(
         np.maximum(C_T - K, 0), F
     ),
 ) -> np.ndarray:
@@ -164,7 +164,7 @@ def net_present_value(
         catbond_markup: The markup on the catbond.
         K: The catastrophe bond strike price.
         F: The face value of the catastrophe bond.
-        psi_T: The catastrophe bond trigger function.
+        psi_fn: The catastrophe bond trigger function.
 
 
     Returns:
@@ -220,8 +220,8 @@ def net_present_value(
             sigma_C,
             markup=0.0,
             K=K,
-            psi_T=psi_T,
             F=F,
+            psi_fn=psi_fn,
         )
 
         npvs[c] = markup * reinsurance_pv - catbond_markup * delta_0
@@ -257,7 +257,7 @@ def total_hedging_cost(
     F_ins: float = 100.0,
     K_reins: float = 0.0,
     F_reins: float = 100.0,
-    psi_T: Callable[[float, float, float], float] = lambda C_T, K, F: np.minimum(
+    psi_fn: Callable[[float, float, float], float] = lambda C_T, K, F: np.minimum(
         np.maximum(C_T - K, 0), F
     ),
 ) -> np.ndarray:
@@ -287,8 +287,7 @@ def total_hedging_cost(
         F_ins: float = 100.0,
         K_reins: float = 0.0,
         F_reins: float = 100.0,
-        psi_T: The catastrophe bond trigger function.
-        F: The face value of the catastrophe bond.
+        psi_fn: The catastrophe bond trigger function.
 
 
     Returns:
@@ -317,7 +316,7 @@ def total_hedging_cost(
         catbond=True,
         K=K_reins,
         F=F_reins,
-        psi_T=psi_T,
+        psi_fn=psi_fn,
     )
 
     delta_ins = catbond_prices(
@@ -341,7 +340,7 @@ def total_hedging_cost(
         markup=0.0,
         K=K_ins,
         F=F_ins,
-        psi_T=psi_T,
+        psi_fn=psi_fn,
     )
 
     return markup * reinsurance_pv + catbond_markup * delta_ins

@@ -423,8 +423,6 @@ for i, F in enumerate(Fs):
     )
 # -
 
-present_values
-
 plt.plot(Fs, present_values)
 plt.plot(Fs, present_values, ls="--");
 
@@ -455,7 +453,6 @@ free_bond = catbond_prices(
 free_bond
 
 # +
-# %%time
 face_values = np.linspace(0.0, 2, 5)
 deltas = np.empty_like(face_values)
 
