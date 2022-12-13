@@ -22,8 +22,9 @@ module_path = os.path.abspath(os.path.join(".."))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from dynamic_contagion import *
 import matplotlib.pyplot as plt
+
+from dynamic_contagion import *
 # -
 
 maturity = 3

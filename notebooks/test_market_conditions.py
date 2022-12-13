@@ -22,8 +22,9 @@ module_path = os.path.abspath(os.path.join(".."))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from market_conditions import *
 import matplotlib.pyplot as plt
+
+from market_conditions import *
 
 # +
 # Other parameters

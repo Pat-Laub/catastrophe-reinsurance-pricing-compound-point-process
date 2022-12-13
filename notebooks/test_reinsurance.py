@@ -23,12 +23,12 @@ module_path = os.path.abspath(os.path.join(".."))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from market_conditions import *
-from dynamic_contagion import *
-from reinsurance import *
-
 import matplotlib.pyplot as plt
 import pandas as pd
+
+from dynamic_contagion import *
+from market_conditions import *
+from reinsurance import *
 
 # +
 # Other parameters
@@ -368,7 +368,7 @@ print(
     .replace("lrrrrrrr", "c|c|c|c|c|c|c|c")
 )
 
-price_dcp = calculate_prices(V_T, L_T, int_r_t, C_T_dcp, markup, As=(20,), Ms=(90,))
+price_dcp = calculate_prices(V_T, L_T, int_r_t, C_T_dcp, markup, A=20, M=90)
 price_dcp
 
 # +

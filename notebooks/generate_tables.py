@@ -16,20 +16,20 @@
 # %config InlineBackend.figure_format='retina'
 
 # Add the parent directory to the path so that we can import the modules.
-from functools import partial
 import os
 import sys
+from functools import partial
 
 module_path = os.path.abspath(os.path.join(".."))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from market_conditions import *
-from dynamic_contagion import *
-from reinsurance import *
-
 import matplotlib.pyplot as plt
 import pandas as pd
+
+from dynamic_contagion import *
+from market_conditions import *
+from reinsurance import *
 
 # +
 # Other parameters
@@ -136,11 +136,23 @@ prices = reinsurance_prices(
 prices.shape
 # -
 
+df = pd.DataFrame(prices[c])
+df.index = ["$A=10$", "$A=15$", "$A=20$", "$A=25$", "$A=30$"]
+
 # Tables 1 to 4
 cat_models = ("Poisson", "Cox", "Hawkes", "DCP")
 for c in range(4):
     print(cat_models[c])
     display(pd.DataFrame(prices[c]).round(4))
+    print(
+        pd.DataFrame(
+            prices[c], index=["$A=10$", "$A=15$", "$A=20$", "$A=25$", "$A=30$"]
+        )
+        .round(4)
+        .style.to_latex()
+        .replace("00 ", " ")
+        .replace("lrrrrrrr", "c|c|c|c|c|c|c|c")
+    )
 
 # ## Table 5: Default risk premium
 

@@ -63,7 +63,7 @@ def simulate_market_conditions(
         m: Long-run mean of the interest rate process.
         phi_V: Interest rate elasticity of the assets.
         sigma_V: Volatility of credit risk.
-        phi_L: Interest rate elastiticity of liability process.
+        phi_L: Interest rate elasticity of liability process.
         sigma_L: Volatility of idiosyncratic risk.
         upsilon: Volatility of the interest rate process.
         V_0: The initial value of the reinsurer's assets.
@@ -139,7 +139,7 @@ def get_market_conditions(
         m: Long-run mean of the interest rate process.
         phi_V: Interest rate elasticity of the assets.
         sigma_V: Volatility of credit risk.
-        phi_L: Interest rate elastiticity of liability process.
+        phi_L: Interest rate elasticity of liability process.
         sigma_L: Volatility of idiosyncratic risk.
         upsilon: Volatility of the interest rate process.
         V_0: The initial value of the reinsurer's assets.
