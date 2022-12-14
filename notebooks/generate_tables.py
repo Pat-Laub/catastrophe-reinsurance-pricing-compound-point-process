@@ -481,3 +481,92 @@ for c in range(4):
     print(cat_models[c])
     percentage_increase = ((catbond_prices[c] - prices[c]) / prices[c] * 100).round(2)
     print(prices_to_tex(percentage_increase, As, Ms).replace("00 ", "\% "))
+# -
+
+# ## Table 17: Default risk premium with catbond
+
+# +
+# %%time
+
+K = 40.0
+F = 25.0
+
+risky_prices = reinsurance_prices(
+    R,
+    seed,
+    maturity,
+    k,
+    eta_r,
+    m,
+    phi_V,
+    sigma_V,
+    phi_L,
+    sigma_L,
+    upsilon,
+    V_0,
+    L_0,
+    r_0,
+    simulators,
+    mu_C,
+    sigma_C,
+    markup,
+)[:, np.newaxis]
+
+safe_prices = reinsurance_prices(
+    R,
+    seed,
+    maturity,
+    k,
+    eta_r,
+    m,
+    phi_V,
+    sigma_V,
+    phi_L,
+    sigma_L,
+    upsilon,
+    V_0,
+    L_0,
+    r_0,
+    simulators,
+    mu_C,
+    sigma_C,
+    markup,
+    defaultable=False,
+)[:, np.newaxis]
+
+catbond_prices = reinsurance_prices(
+    R,
+    seed,
+    maturity,
+    k,
+    eta_r,
+    m,
+    phi_V,
+    sigma_V,
+    phi_L,
+    sigma_L,
+    upsilon,
+    V_0,
+    L_0,
+    r_0,
+    simulators,
+    mu_C,
+    sigma_C,
+    markup,
+    catbond=True,
+    K=K,
+    F=F,
+)[:, np.newaxis]
+
+
+# -
+
+catbond_premium = catbond_prices - risky_prices
+catbond_premium.round(4)
+
+catbond_risk_premiums = np.hstack(
+    (risky_prices, catbond_prices, safe_prices, catbond_premium)
+).round(4)
+catbond_risk_premiums
+
+print(pd.DataFrame(catbond_risk_premiums).style.to_latex().replace("00 ", " "))
