@@ -103,12 +103,40 @@ def simulate_dcp(seed):
         seed, maturity, lambda0, a, rho, delta, 0.0, 1.0, 0.0, 0.5
     )
 
-
+simulators = (simulate_poisson, simulate_cox, simulate_hawkes, simulate_dcp)
 # -
 
 # ## Tables 1-4
 
 # +
+ROUNDING = 4
+
+As = (10.0, 15.0, 20.0, 25.0, 30.0)
+Ms = (60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0)
+
+def prices_to_df(prices, As, Ms):
+    try:
+        cols = [f"$M={int(m)}$" for m in Ms]
+        rows = [f"$A={int(a)}$" for a in As]
+    except ValueError:
+        cols = [f"$M={m}$" for m in Ms]
+        rows = [f"$A={a}$" for a in As]
+
+    return pd.DataFrame(prices.round(ROUNDING), columns=cols, index=rows)
+
+
+def prices_to_tex(prices, As, Ms):
+    df = prices_to_df(prices, As, Ms)
+    display(df)
+    return (
+        df.style.to_latex()
+            .replace("lrrrrrrr", "c|c|c|c|c|c|c|c")
+            .replace("00 ", " ")
+    )
+
+
+# -
+
 # %%time
 prices = reinsurance_prices(
     R,
@@ -125,31 +153,19 @@ prices = reinsurance_prices(
     V_0,
     L_0,
     r_0,
-    (simulate_poisson, simulate_cox, simulate_hawkes, simulate_dcp),
+    simulators,
     mu_C,
     sigma_C,
     markup,
-    A=(10.0, 15.0, 20.0, 25.0, 30.0),
-    M=(60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0),
+    A=As,
+    M=Ms,
 )
-
-prices.shape
-# -
 
 # Tables 1 to 4
 cat_models = ("Poisson", "Cox", "Hawkes", "DCP")
 for c in range(4):
     print(cat_models[c])
-    display(pd.DataFrame(prices[c]).round(4))
-    print(
-        pd.DataFrame(
-            prices[c], index=["$A=10$", "$A=15$", "$A=20$", "$A=25$", "$A=30$"]
-        )
-        .round(4)
-        .style.to_latex()
-        .replace("00 ", " ")
-        .replace("lrrrrrrr", "c|c|c|c|c|c|c|c")
-    )
+    print(prices_to_tex(prices[c], As, Ms))
 
 # ## Table 5: Default risk premium
 
@@ -169,7 +185,7 @@ risky_prices = reinsurance_prices(
     V_0,
     L_0,
     r_0,
-    (simulate_poisson, simulate_cox, simulate_hawkes, simulate_dcp),
+    simulators,
     mu_C,
     sigma_C,
     markup,
@@ -193,7 +209,7 @@ safe_prices = reinsurance_prices(
     V_0,
     L_0,
     r_0,
-    (simulate_poisson, simulate_cox, simulate_hawkes, simulate_dcp),
+    simulators,
     mu_C,
     sigma_C,
     markup,
@@ -221,7 +237,7 @@ def simulate_dcp_variations(seed, rho):
     )
 
 
-simulators = [partial(simulate_dcp_variations, rho=rho) for rho in (0.4, 3, 10, 20)]
+dcp_variations = [partial(simulate_dcp_variations, rho=rho) for rho in (0.4, 3, 10, 20)]
 # -
 
 # %%time
@@ -240,7 +256,7 @@ risky_prices = reinsurance_prices(
     tuple(int(scale * L_0) for scale in (1.1, 1.3, 1.5)),
     L_0,
     r_0,
-    simulators,
+    dcp_variations,
     mu_C,
     sigma_C,
     markup,
@@ -264,7 +280,7 @@ safe_prices = reinsurance_prices(
     tuple(int(scale * L_0) for scale in (1.1, 1.3, 1.5)),
     L_0,
     r_0,
-    simulators,
+    dcp_variations,
     mu_C,
     sigma_C,
     markup,
@@ -292,7 +308,7 @@ def simulate_dcp_variations(seed, mu_F=0.25, mu_G=0.5):
     )
 
 
-simulators = [
+dcp_variations = [
     partial(simulate_dcp_variations, mu_F=mu_F) for mu_F in (0.25, 1.0, 4.0, 8.0)
 ]
 
@@ -313,7 +329,7 @@ risky_prices = reinsurance_prices(
     tuple(int(scale * L_0) for scale in (1.1, 1.3, 1.5)),
     L_0,
     r_0,
-    simulators,
+    dcp_variations,
     mu_C,
     sigma_C,
     markup,
@@ -334,7 +350,7 @@ safe_prices = reinsurance_prices(
     tuple(int(scale * L_0) for scale in (1.1, 1.3, 1.5)),
     L_0,
     r_0,
-    simulators,
+    dcp_variations,
     mu_C,
     sigma_C,
     markup,
@@ -351,7 +367,7 @@ np.hstack([risky_prices, risk_premium]).round(4)
 # +
 # %%time
 
-simulators = [
+dcp_variations = [
     partial(simulate_dcp_variations, mu_G=mu_G) for mu_G in (0.5, 1.0, 2.0, 3.0)
 ]
 
@@ -370,7 +386,7 @@ risky_prices = reinsurance_prices(
     tuple(int(scale * L_0) for scale in (1.1, 1.3, 1.5)),
     L_0,
     r_0,
-    simulators,
+    dcp_variations,
     mu_C,
     sigma_C,
     markup,
@@ -391,7 +407,7 @@ safe_prices = reinsurance_prices(
     tuple(int(scale * L_0) for scale in (1.1, 1.3, 1.5)),
     L_0,
     r_0,
-    simulators,
+    dcp_variations,
     mu_C,
     sigma_C,
     markup,
@@ -402,3 +418,53 @@ risk_premium = safe_prices - risky_prices
 # -
 
 np.hstack([risky_prices, risk_premium]).round(4)
+
+# ## Tables 9-12: Prices with catbond
+
+K = 40.0
+F = 25.0
+
+# %%time
+catbond_prices = reinsurance_prices(
+    R,
+    seed,
+    maturity,
+    k,
+    eta_r,
+    m,
+    phi_V,
+    sigma_V,
+    phi_L,
+    sigma_L,
+    upsilon,
+    V_0,
+    L_0,
+    r_0,
+    simulators,
+    mu_C,
+    sigma_C,
+    markup,
+    A=As,
+    M=Ms,
+    catbond=True,
+    K=K,
+    F=F,
+)
+
+# +
+print("Prices of reinsurance when the reinsurer issues a catbond\n")
+
+for c in range(4):
+    print(cat_models[c])
+    print(prices_to_tex(catbond_prices[c], As, Ms))
+# -
+
+# ## Tables 13-16: Percentage increase in costs after issuing a catbond
+
+# +
+print("Percentage increase in price for reinsurance after the reinsurer issues a catbond\n")
+
+for c in range(4):
+    print(cat_models[c])
+    percentage_increase = ((catbond_prices[c] - prices[c]) / prices[c] * 100).round(2)
+    print(prices_to_tex(percentage_increase, As, Ms).replace("00 ", "\% "))

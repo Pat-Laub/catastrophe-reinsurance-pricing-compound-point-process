@@ -328,47 +328,16 @@ def plot_num_cats(num_cats_poisson, num_cats_cox, num_cats_hawkes, num_cats_dcp)
 
 plot_num_cats(num_cats_poisson, num_cats_cox, num_cats_hawkes, num_cats_dcp)
 plt.savefig("num_catastrophe_hists.png")
-# -
-
-# ## Tables 1-4 (LaTeX)
 
 # +
-ROUNDING = 4
-
-As = (10.0, 15.0, 20.0, 25.0, 30.0)
-Ms = (60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0)
-
-
-def prices_to_tex(prices, As, Ms):
-    try:
-        cols = [f"$M={int(m)}$" for m in Ms]
-        rows = [f"$A={int(a)}$" for a in As]
-    except ValueError:
-        cols = [f"$M={m}$" for m in Ms]
-        rows = [f"$A={a}$" for a in As]
-
-    df = pd.DataFrame(prices.round(ROUNDING), columns=cols, index=rows)
-
-    display(df)
-
-    return (
-        df.style.to_latex().replace("00 ", " ").replace("lrrrrrrr", "c|c|c|c|c|c|c|c")
-    )
-
-
-# -
-
 prices_poisson = calculate_prices(V_T, L_T, int_r_t, C_T_poisson, markup)
-print(prices_to_tex(prices_poisson, As, Ms))
-
 prices_cox = calculate_prices(V_T, L_T, int_r_t, C_T_cox, markup)
-print(prices_to_tex(prices_cox, As, Ms))
-
 prices_hawkes = calculate_prices(V_T, L_T, int_r_t, C_T_hawkes, markup)
-print(prices_to_tex(prices_hawkes, As, Ms))
-
 prices_dcp = calculate_prices(V_T, L_T, int_r_t, C_T_dcp, markup)
-print(prices_to_tex(prices_dcp, As, Ms))
+
+display(prices_poisson)
+display(prices_dcp)
+# -
 
 price_dcp = calculate_prices(V_T, L_T, int_r_t, C_T_dcp, markup, A=20, M=90)
 price_dcp
