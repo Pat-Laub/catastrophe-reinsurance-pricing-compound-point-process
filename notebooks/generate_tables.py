@@ -103,6 +103,7 @@ def simulate_dcp(seed):
         seed, maturity, lambda0, a, rho, delta, 0.0, 1.0, 0.0, 0.5
     )
 
+
 simulators = (simulate_poisson, simulate_cox, simulate_hawkes, simulate_dcp)
 # -
 
@@ -113,6 +114,7 @@ ROUNDING = 4
 
 As = (10.0, 15.0, 20.0, 25.0, 30.0)
 Ms = (60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0)
+
 
 def prices_to_df(prices, As, Ms):
     try:
@@ -129,9 +131,7 @@ def prices_to_tex(prices, As, Ms):
     df = prices_to_df(prices, As, Ms)
     display(df)
     return (
-        df.style.to_latex()
-            .replace("lrrrrrrr", "c|c|c|c|c|c|c|c")
-            .replace("00 ", " ")
+        df.style.to_latex().replace("lrrrrrrr", "c|c|c|c|c|c|c|c").replace("00 ", " ")
     )
 
 
@@ -221,7 +221,10 @@ safe_prices.round(4)
 risk_premium = safe_prices - risky_prices
 risk_premium.round(4)
 
-np.hstack((risky_prices, safe_prices, risk_premium)).round(4)
+default_risk_premiums = np.hstack((risky_prices, safe_prices, risk_premium)).round(4)
+default_risk_premiums
+
+print(pd.DataFrame(default_risk_premiums).style.to_latex().replace("00 ", " "))
 
 
 # ## Table 6: Impacts of externally-excited jump frequency rate
@@ -291,7 +294,10 @@ safe_prices.round(4)
 
 risk_premium = safe_prices - risky_prices
 
-np.hstack([risky_prices, risk_premium]).round(4)
+impacts_of_ext_jump_freq = np.hstack([risky_prices, risk_premium]).round(4)
+impacts_of_ext_jump_freq
+
+print(pd.DataFrame(impacts_of_ext_jump_freq).style.to_latex().replace("00 ", " "))
 
 
 # ## Table 7: Impacts of externally-excited jump magnitude
@@ -360,13 +366,15 @@ safe_prices = reinsurance_prices(
 risk_premium = safe_prices - risky_prices
 # -
 
-np.hstack([risky_prices, risk_premium]).round(4)
+impacts_of_ext_jump_mag = np.hstack([risky_prices, risk_premium]).round(4)
+impacts_of_ext_jump_mag
+
+print(pd.DataFrame(impacts_of_ext_jump_mag).style.to_latex().replace("00 ", " "))
 
 # ## Table 8: Impacts of self-excited jump magnitude
 
 # +
 # %%time
-
 dcp_variations = [
     partial(simulate_dcp_variations, mu_G=mu_G) for mu_G in (0.5, 1.0, 2.0, 3.0)
 ]
@@ -417,7 +425,10 @@ safe_prices = reinsurance_prices(
 risk_premium = safe_prices - risky_prices
 # -
 
-np.hstack([risky_prices, risk_premium]).round(4)
+impact_of_self_jump_mag = np.hstack([risky_prices, risk_premium]).round(4)
+impact_of_self_jump_mag
+
+print(pd.DataFrame(impact_of_self_jump_mag).style.to_latex().replace("00 ", " "))
 
 # ## Tables 9-12: Prices with catbond
 
@@ -462,7 +473,9 @@ for c in range(4):
 # ## Tables 13-16: Percentage increase in costs after issuing a catbond
 
 # +
-print("Percentage increase in price for reinsurance after the reinsurer issues a catbond\n")
+print(
+    "Percentage increase in price for reinsurance after the reinsurer issues a catbond\n"
+)
 
 for c in range(4):
     print(cat_models[c])
