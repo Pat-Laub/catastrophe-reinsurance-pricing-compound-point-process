@@ -2,7 +2,7 @@ from typing import Callable, Type
 
 import numpy as np
 import numpy.random as rnd
-from numba import njit
+from numba import njit  # type: ignore
 
 
 def simulate_num_dynamic_contagion(

@@ -3,7 +3,7 @@ from typing import Callable, Tuple
 import numpy as np
 import numpy.random as rnd
 import pandas as pd
-from numba import njit
+from numba import njit  # type: ignore
 
 from market_conditions import get_market_conditions, summarise_market_conditions
 

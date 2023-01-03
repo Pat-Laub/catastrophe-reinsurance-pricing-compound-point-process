@@ -2,8 +2,8 @@ from pathlib import Path
 
 import numpy as np
 import numpy.random as rnd
-import sdeint
-from joblib import Parallel, delayed
+import sdeint  # type: ignore
+from joblib import Parallel, delayed  # type: ignore
 
 # Create a pathlib path to the data directory (a subdirectory of this file's directory)
 DATA_DIR = Path(__file__).parent / "data"
