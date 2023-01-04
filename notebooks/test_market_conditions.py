@@ -8,22 +8,15 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.14.2
 #   kernelspec:
-#     display_name: catbond
+#     display_name: Python [conda env:catbond]
 #     language: python
-#     name: python3
+#     name: conda-env-catbond-py
 # ---
 
 # +
-# Add the parent directory to the path so that we can import the modules.
-import os
-import sys
-
-module_path = os.path.abspath(os.path.join(".."))
-if module_path not in sys.path:
-    sys.path.append(module_path)
-
 import matplotlib.pyplot as plt
 
+import __module_import__
 from market_conditions import *
 
 # +
