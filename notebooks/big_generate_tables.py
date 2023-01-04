@@ -28,7 +28,7 @@ from reinsurance import *
 # Other parameters
 maturity = 3
 markup = 0.4
-R = int(1e5)
+R = int(1e6)
 seed = 123
 
 # Asset parameters

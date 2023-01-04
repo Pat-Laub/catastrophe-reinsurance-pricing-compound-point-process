@@ -1,27 +1,20 @@
 # ---
 # jupyter:
 #   jupytext:
+#     formats: ipynb,py:light
 #     text_representation:
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
 #       jupytext_version: 1.14.2
 #   kernelspec:
-#     display_name: catbond
+#     display_name: Python [conda env:catbond]
 #     language: python
-#     name: python3
+#     name: conda-env-catbond-py
 # ---
 
 # +
 # %config InlineBackend.figure_format='retina'
-
-# Add the parent directory to the path so that we can import the modules.
-import os
-import sys
-
-module_path = os.path.abspath(os.path.join(".."))
-if module_path not in sys.path:
-    sys.path.append(module_path)
 
 from functools import partial
 
@@ -29,6 +22,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from tqdm import tqdm
 
+import __module_import__
 from catbond import *
 from dynamic_contagion import *
 from market_conditions import *
@@ -81,9 +75,7 @@ def simulate_cox(seed):
     rho = 0.4
     delta = 1
 
-    return simulate_num_dynamic_contagion_uniform_jumps(
-        seed, maturity, lambda0, a, rho, delta, 0.0, 0.0, 0.0, 0.5
-    )
+    return simulate_num_dynamic_contagion_uniform_jumps(seed, maturity, lambda0, a, rho, delta, 0.0, 0.0, 0.0, 0.5)
 
 
 # Hawkes process
@@ -93,9 +85,7 @@ def simulate_hawkes(seed):
     rho = 0.4
     delta = 1
 
-    return simulate_num_dynamic_contagion_uniform_jumps(
-        seed, maturity, lambda0, a, rho, delta, 0.0, 1.0, 0.0, 0.0
-    )
+    return simulate_num_dynamic_contagion_uniform_jumps(seed, maturity, lambda0, a, rho, delta, 0.0, 1.0, 0.0, 0.0)
 
 
 # Dynamic contagion process
@@ -105,9 +95,7 @@ def simulate_dcp(seed):
     rho = 0.4
     delta = 1
 
-    return simulate_num_dynamic_contagion_uniform_jumps(
-        seed, maturity, lambda0, a, rho, delta, 0.0, 1.0, 0.0, 0.5
-    )
+    return simulate_num_dynamic_contagion_uniform_jumps(seed, maturity, lambda0, a, rho, delta, 0.0, 1.0, 0.0, 0.5)
 
 
 # -
@@ -284,9 +272,7 @@ fig, ax = plt.subplots(1, 2, figsize=(10, 5))
 
 # Plot on the left subfigure
 for i in range(4):
-    ax[0].plot(
-        [0, 1], [risky_prices[i], safe_prices[i]], label=names[i], ls="--", marker="*"
-    )
+    ax[0].plot([0, 1], [risky_prices[i], safe_prices[i]], label=names[i], ls="--", marker="*")
 ax[0].legend()
 
 # Remove top and right splines
@@ -330,12 +316,7 @@ plt.savefig("reinsurance_prices_with_and_without_catbonds.png", dpi=300);
 
 # +
 for i in range(4):
-    plt.plot(
-        [0, 1],
-        [risky_prices[i] / risky_prices[i], safe_prices[i] / risky_prices[i]],
-        label=names[i],
-        marker="*",
-    )
+    plt.plot([0, 1], [risky_prices[i] / risky_prices[i], safe_prices[i] / risky_prices[i]], label=names[i], marker="*")
 plt.legend()
 
 # Remove top and right splines
@@ -358,20 +339,7 @@ plt.rcParams.update({"font.size": 14})
 # -
 
 delta_0 = catbond_prices(
-    R,
-    seed,
-    maturity,
-    k,
-    eta_r,
-    m,
-    upsilon,
-    r_0,
-    simulate_poisson,
-    mu_C,
-    sigma_C,
-    markup=0.0,
-    K=40.0,
-    F=10.0,
+    R, seed, maturity, k, eta_r, m, upsilon, r_0, simulate_poisson, mu_C, sigma_C, markup=0.0, K=40.0, F=10.0
 )
 
 delta_0
@@ -413,20 +381,7 @@ plt.plot(Fs, present_values, ls="--");
 
 # +
 free_bond = catbond_prices(
-    R,
-    seed,
-    maturity,
-    k,
-    eta_r,
-    m,
-    upsilon,
-    r_0,
-    simulate_poisson,
-    mu_C,
-    sigma_C,
-    markup=0.0,
-    K=70.0,
-    F=0.0,
+    R, seed, maturity, k, eta_r, m, upsilon, r_0, simulate_poisson, mu_C, sigma_C, markup=0.0, K=70.0, F=0.0
 )
 
 free_bond
@@ -437,20 +392,7 @@ deltas = np.empty_like(Fs)
 
 for i, F in enumerate(Fs):
     deltas[i] = catbond_prices(
-        R,
-        seed,
-        maturity,
-        k,
-        eta_r,
-        m,
-        upsilon,
-        r_0,
-        simulate_poisson,
-        mu_C,
-        sigma_C,
-        markup=0.0,
-        K=10.0,
-        F=F,
+        R, seed, maturity, k, eta_r, m, upsilon, r_0, simulate_poisson, mu_C, sigma_C, markup=0.0, K=10.0, F=F
     )
 # -
 

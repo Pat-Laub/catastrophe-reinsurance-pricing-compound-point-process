@@ -1,31 +1,25 @@
 # ---
 # jupyter:
 #   jupytext:
+#     formats: ipynb,py:light
 #     text_representation:
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
 #       jupytext_version: 1.14.2
 #   kernelspec:
-#     display_name: catbond
+#     display_name: Python [conda env:catbond]
 #     language: python
-#     name: python3
+#     name: conda-env-catbond-py
 # ---
 
 # +
 # %config InlineBackend.figure_format='retina'
 
-# Add the parent directory to the path so that we can import the modules.
-import os
-import sys
-
-module_path = os.path.abspath(os.path.join(".."))
-if module_path not in sys.path:
-    sys.path.append(module_path)
-
 import matplotlib.pyplot as plt
 import pandas as pd
 
+import __module_import__
 from dynamic_contagion import *
 from market_conditions import *
 from reinsurance import *
@@ -56,20 +50,7 @@ eta_r = -0.01
 
 # +
 all_time_series = get_market_conditions(
-    R,
-    seed,
-    maturity,
-    k,
-    eta_r,
-    m,
-    phi_V,
-    sigma_V,
-    phi_L,
-    sigma_L,
-    upsilon,
-    V_0,
-    L_0,
-    r_0,
+    R, seed, maturity, k, eta_r, m, phi_V, sigma_V, phi_L, sigma_L, upsilon, V_0, L_0, r_0
 )
 
 V_T, L_T, int_r_t = summarise_market_conditions(all_time_series, maturity)
@@ -99,9 +80,7 @@ def simulate_cox_slow(seed):
     selfJumpSizeDist = lambda rg: 0
     extJumpSizeDist = lambda rg: rg.uniform(0, 0.5)
 
-    return simulate_num_dynamic_contagion(
-        rg, maturity, lambda0, a, rho, delta, selfJumpSizeDist, extJumpSizeDist
-    )
+    return simulate_num_dynamic_contagion(rg, maturity, lambda0, a, rho, delta, selfJumpSizeDist, extJumpSizeDist)
 
 
 # Hawkes process
@@ -115,9 +94,7 @@ def simulate_hawkes_slow(seed):
     selfJumpSizeDist = lambda rg: rg.uniform()
     extJumpSizeDist = lambda rg: 0
 
-    return simulate_num_dynamic_contagion(
-        rg, maturity, lambda0, a, rho, delta, selfJumpSizeDist, extJumpSizeDist
-    )
+    return simulate_num_dynamic_contagion(rg, maturity, lambda0, a, rho, delta, selfJumpSizeDist, extJumpSizeDist)
 
 
 # Dynamic contagion process
@@ -131,9 +108,7 @@ def simulate_dcp_slow(seed):
     selfJumpSizeDist = lambda rg: rg.uniform()
     extJumpSizeDist = lambda rg: rg.uniform(0, 0.5)
 
-    return simulate_num_dynamic_contagion(
-        rg, maturity, lambda0, a, rho, delta, selfJumpSizeDist, extJumpSizeDist
-    )
+    return simulate_num_dynamic_contagion(rg, maturity, lambda0, a, rho, delta, selfJumpSizeDist, extJumpSizeDist)
 
 
 # +
@@ -144,21 +119,13 @@ sigma_C = 0.5
 
 seed = 123
 
-C_T_poisson, num_cats_poisson = simulate_catastrophe_losses(
-    seed, R, simulate_poisson_slow, mu_C, sigma_C
-)
+C_T_poisson, num_cats_poisson = simulate_catastrophe_losses(seed, R, simulate_poisson_slow, mu_C, sigma_C)
 
-C_T_cox, num_cats_cox = simulate_catastrophe_losses(
-    seed, R, simulate_cox_slow, mu_C, sigma_C
-)
+C_T_cox, num_cats_cox = simulate_catastrophe_losses(seed, R, simulate_cox_slow, mu_C, sigma_C)
 
-C_T_hawkes, num_cats_hawkes = simulate_catastrophe_losses(
-    seed, R, simulate_hawkes_slow, mu_C, sigma_C
-)
+C_T_hawkes, num_cats_hawkes = simulate_catastrophe_losses(seed, R, simulate_hawkes_slow, mu_C, sigma_C)
 
-C_T_dcp, num_cats_dcp = simulate_catastrophe_losses(
-    seed, R, simulate_dcp_slow, mu_C, sigma_C
-)
+C_T_dcp, num_cats_dcp = simulate_catastrophe_losses(seed, R, simulate_dcp_slow, mu_C, sigma_C)
 
 
 # +
@@ -176,9 +143,7 @@ def simulate_cox(seed):
     rho = 0.4
     delta = 1
 
-    return simulate_num_dynamic_contagion_uniform_jumps(
-        seed, maturity, lambda0, a, rho, delta, 0.0, 0.0, 0.0, 0.5
-    )
+    return simulate_num_dynamic_contagion_uniform_jumps(seed, maturity, lambda0, a, rho, delta, 0.0, 0.0, 0.0, 0.5)
 
 
 # Hawkes process
@@ -188,9 +153,7 @@ def simulate_hawkes(seed):
     rho = 0.4
     delta = 1
 
-    return simulate_num_dynamic_contagion_uniform_jumps(
-        seed, maturity, lambda0, a, rho, delta, 0.0, 1.0, 0.0, 0.0
-    )
+    return simulate_num_dynamic_contagion_uniform_jumps(seed, maturity, lambda0, a, rho, delta, 0.0, 1.0, 0.0, 0.0)
 
 
 # Dynamic contagion process
@@ -200,9 +163,7 @@ def simulate_dcp(seed):
     rho = 0.4
     delta = 1
 
-    return simulate_num_dynamic_contagion_uniform_jumps(
-        seed, maturity, lambda0, a, rho, delta, 0.0, 1.0, 0.0, 0.5
-    )
+    return simulate_num_dynamic_contagion_uniform_jumps(seed, maturity, lambda0, a, rho, delta, 0.0, 1.0, 0.0, 0.5)
 
 
 # +
@@ -213,59 +174,29 @@ sigma_C = 0.5
 
 seed = 123
 
-C_T_poisson, num_cats_poisson = simulate_catastrophe_losses(
-    seed, R, simulate_poisson, mu_C, sigma_C
-)
+C_T_poisson, num_cats_poisson = simulate_catastrophe_losses(seed, R, simulate_poisson, mu_C, sigma_C)
 
-C_T_cox, num_cats_cox = simulate_catastrophe_losses(
-    seed, R, simulate_cox, mu_C, sigma_C
-)
+C_T_cox, num_cats_cox = simulate_catastrophe_losses(seed, R, simulate_cox, mu_C, sigma_C)
 
-C_T_hawkes, num_cats_hawkes = simulate_catastrophe_losses(
-    seed, R, simulate_hawkes, mu_C, sigma_C
-)
+C_T_hawkes, num_cats_hawkes = simulate_catastrophe_losses(seed, R, simulate_hawkes, mu_C, sigma_C)
 
-C_T_dcp, num_cats_dcp = simulate_catastrophe_losses(
-    seed, R, simulate_dcp, mu_C, sigma_C
-)
+C_T_dcp, num_cats_dcp = simulate_catastrophe_losses(seed, R, simulate_dcp, mu_C, sigma_C)
 # -
 
-print(
-    f"Average number of catastrophes from Poisson process: {np.mean(num_cats_poisson):.2f}"
-)
+print(f"Average number of catastrophes from Poisson process: {np.mean(num_cats_poisson):.2f}")
 print(f"Average number of catastrophes from Cox process: {np.mean(num_cats_cox):.2f}")
-print(
-    f"Average number of catastrophes from Hawkes process: {np.mean(num_cats_hawkes):.2f}"
-)
-print(
-    f"Average number of catastrophes from dynamic contagion process: {np.mean(num_cats_dcp):.2f}"
-)
+print(f"Average number of catastrophes from Hawkes process: {np.mean(num_cats_hawkes):.2f}")
+print(f"Average number of catastrophes from dynamic contagion process: {np.mean(num_cats_dcp):.2f}")
 
-print(
-    f"Mean/variance catastrophe loss from Poisson process: {np.mean(C_T_poisson):.2f}, {np.var(C_T_poisson):.2f}"
-)
-print(
-    f"Mean/variance catastrophe loss from Cox process: {np.mean(C_T_cox):.2f}, {np.var(C_T_cox):.2f}"
-)
-print(
-    f"Mean/variance catastrophe loss from Hawkes process: {np.mean(C_T_hawkes):.2f}, {np.var(C_T_hawkes):.2f}"
-)
-print(
-    f"Mean/variance catastrophe loss from dynamic contagion process: {np.mean(C_T_dcp):.2f}, {np.var(C_T_dcp):.2f}"
-)
+print(f"Mean/variance catastrophe loss from Poisson process: {np.mean(C_T_poisson):.2f}, {np.var(C_T_poisson):.2f}")
+print(f"Mean/variance catastrophe loss from Cox process: {np.mean(C_T_cox):.2f}, {np.var(C_T_cox):.2f}")
+print(f"Mean/variance catastrophe loss from Hawkes process: {np.mean(C_T_hawkes):.2f}, {np.var(C_T_hawkes):.2f}")
+print(f"Mean/variance catastrophe loss from dynamic contagion process: {np.mean(C_T_dcp):.2f}, {np.var(C_T_dcp):.2f}")
 
-print(
-    f"Min/max catastrophe loss from Poisson process: {np.min(C_T_poisson):.2f}, {np.max(C_T_poisson):.2f}"
-)
-print(
-    f"Min/max catastrophe loss from Cox process: {np.min(C_T_cox):.2f}, {np.max(C_T_cox):.2f}"
-)
-print(
-    f"Min/max catastrophe loss from Hawkes process: {np.min(C_T_hawkes):.2f}, {np.max(C_T_hawkes):.2f}"
-)
-print(
-    f"Min/max catastrophe loss from dynamic contagion process: {np.min(C_T_dcp):.2f}, {np.max(C_T_dcp):.2f}"
-)
+print(f"Min/max catastrophe loss from Poisson process: {np.min(C_T_poisson):.2f}, {np.max(C_T_poisson):.2f}")
+print(f"Min/max catastrophe loss from Cox process: {np.min(C_T_cox):.2f}, {np.max(C_T_cox):.2f}")
+print(f"Min/max catastrophe loss from Hawkes process: {np.min(C_T_hawkes):.2f}, {np.max(C_T_hawkes):.2f}")
+print(f"Min/max catastrophe loss from dynamic contagion process: {np.min(C_T_dcp):.2f}, {np.max(C_T_dcp):.2f}")
 
 
 # +
@@ -276,22 +207,8 @@ def plot_num_cats(num_cats_poisson, num_cats_cox, num_cats_hawkes, num_cats_dcp)
     num_cats_hawkes = np.floor(num_cats_hawkes)
     num_cats_dcp = np.floor(num_cats_dcp)
 
-    max_cats = np.max(
-        [
-            np.max(num_cats_poisson),
-            np.max(num_cats_cox),
-            np.max(num_cats_hawkes),
-            np.max(num_cats_dcp),
-        ]
-    )
-    min_cats = np.min(
-        [
-            np.min(num_cats_poisson),
-            np.min(num_cats_cox),
-            np.min(num_cats_hawkes),
-            np.min(num_cats_dcp),
-        ]
-    )
+    max_cats = np.max([np.max(num_cats_poisson), np.max(num_cats_cox), np.max(num_cats_hawkes), np.max(num_cats_dcp)])
+    min_cats = np.min([np.min(num_cats_poisson), np.min(num_cats_cox), np.min(num_cats_hawkes), np.min(num_cats_dcp)])
 
     num_bins = int(max_cats - min_cats + 1)
 

@@ -45,20 +45,7 @@ eta_r = -0.01
 
 # +
 all_time_series = get_market_conditions(
-    R,
-    seed,
-    maturity,
-    k,
-    eta_r,
-    m,
-    phi_V,
-    sigma_V,
-    phi_L,
-    sigma_L,
-    upsilon,
-    V_0,
-    L_0,
-    r_0,
+    R, seed, maturity, k, eta_r, m, phi_V, sigma_V, phi_L, sigma_L, upsilon, V_0, L_0, r_0
 )
 
 V_T, L_T, int_r_t = summarise_market_conditions(all_time_series, maturity)

@@ -48,9 +48,7 @@ def simulate_cox_slow(rg):
     selfJumpSizeDist = lambda rg: 0
     extJumpSizeDist = lambda rg: rg.uniform(0, 0.5)
 
-    return simulate_num_dynamic_contagion(
-        rg, maturity, lambda0, a, rho, delta, selfJumpSizeDist, extJumpSizeDist
-    )
+    return simulate_num_dynamic_contagion(rg, maturity, lambda0, a, rho, delta, selfJumpSizeDist, extJumpSizeDist)
 
 
 seed = 123
@@ -90,9 +88,7 @@ def simulate_hawkes_slow(rg):
     selfJumpSizeDist = lambda rg: rg.uniform()
     extJumpSizeDist = lambda rg: 0
 
-    return simulate_num_dynamic_contagion(
-        rg, maturity, lambda0, a, rho, delta, selfJumpSizeDist, extJumpSizeDist
-    )
+    return simulate_num_dynamic_contagion(rg, maturity, lambda0, a, rho, delta, selfJumpSizeDist, extJumpSizeDist)
 
 
 rg = np.random.default_rng(123)
@@ -131,9 +127,7 @@ def simulate_dcp_slow(rg):
     selfJumpSizeDist = lambda rg: rg.uniform()
     extJumpSizeDist = lambda rg: rg.uniform(0, 0.5)
 
-    return simulate_num_dynamic_contagion(
-        rg, maturity, lambda0, a, rho, delta, selfJumpSizeDist, extJumpSizeDist
-    )
+    return simulate_num_dynamic_contagion(rg, maturity, lambda0, a, rho, delta, selfJumpSizeDist, extJumpSizeDist)
 
 
 rg = np.random.default_rng(123)
