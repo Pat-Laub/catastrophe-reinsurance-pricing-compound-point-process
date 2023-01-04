@@ -37,9 +37,7 @@ def payout_without_default(C_T: np.ndarray, A: float, M: float) -> np.ndarray:
 
 
 @njit()
-def payout_with_default(
-    V_T: np.ndarray, L_T: np.ndarray, C_T: np.ndarray, A: float, M: float
-) -> np.ndarray:
+def payout_with_default(V_T: np.ndarray, L_T: np.ndarray, C_T: np.ndarray, A: float, M: float) -> np.ndarray:
     """Calculate the payout given the final value of assets, liabilities, and catastrophe losses.
 
     Args:
@@ -80,11 +78,7 @@ def payout_with_default(
 
 
 def simulate_catastrophe_losses(
-    seed: int,
-    R: int,
-    simulator: Callable[[int], int],
-    mu_C: float,
-    sigma_C: float,
+    seed: int, R: int, simulator: Callable[[int], int], mu_C: float, sigma_C: float
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Simulate the losses incurred by natural catastrophes.
 
@@ -186,9 +180,7 @@ def reinsurance_prices(
     catbond: bool = False,
     K: float | Iterable[float] = 40.0,
     F: float | Iterable[float] = 10.0,
-    psi_fn: Callable[
-        [np.ndarray, float, float], np.ndarray
-    ] = lambda C_T, K, F: np.minimum(np.maximum(C_T - K, 0), F),
+    psi_fn: Callable[[np.ndarray, float, float], np.ndarray] = lambda C_T, K, F: np.minimum(np.maximum(C_T - K, 0), F),
 ) -> np.ndarray:
     """Calculate reinsurance prices using Monte Carlo simulation.
 
@@ -246,33 +238,14 @@ def reinsurance_prices(
             continue
 
         all_time_series = get_market_conditions(
-            R,
-            seed,
-            maturity,
-            kappa,
-            eta_r,
-            m,
-            phi_V,
-            sigma_V,
-            phi_L,
-            sigma_L,
-            upsilon,
-            V_0s[v],
-            L_0,
-            r_0,
+            R, seed, maturity, kappa, eta_r, m, phi_V, sigma_V, phi_L, sigma_L, upsilon, V_0s[v], L_0, r_0
         )
 
         V_T, L_T, int_r_t = summarise_market_conditions(all_time_series, maturity)
 
         for s in range(len(simulators)):
 
-            C_T, _ = simulate_catastrophe_losses(
-                seed + 1,
-                R,
-                simulators[s],
-                mu_C,
-                sigma_C,
-            )
+            C_T, _ = simulate_catastrophe_losses(seed + 1, R, simulators[s], mu_C, sigma_C)
 
             for i in range(len(As)):
                 for j in range(len(Ms)):
@@ -280,24 +253,14 @@ def reinsurance_prices(
                         for f in range(len(Fs)):
                             if catbond:
                                 psi_T = psi_fn(C_T, Ks[k], Fs[f])
-                                payouts = payout_with_default(
-                                    V_T + psi_T,
-                                    L_T,
-                                    C_T,
-                                    As[i],
-                                    Ms[j],
-                                )
+                                payouts = payout_with_default(V_T + psi_T, L_T, C_T, As[i], Ms[j])
                             elif defaultable:
-                                payouts = payout_with_default(
-                                    V_T, L_T, C_T, As[i], Ms[j]
-                                )
+                                payouts = payout_with_default(V_T, L_T, C_T, As[i], Ms[j])
                             else:
                                 payouts = payout_without_default(C_T, As[i], Ms[j])
 
                             discounted_payouts = np.exp(-int_r_t) * payouts
 
-                            prices[v, s, i, j, k, f] = (1 + markup) * np.mean(
-                                discounted_payouts
-                            )
+                            prices[v, s, i, j, k, f] = (1 + markup) * np.mean(discounted_payouts)
 
     return prices.squeeze()

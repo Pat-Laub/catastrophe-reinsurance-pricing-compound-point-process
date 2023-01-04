@@ -102,11 +102,7 @@ def simulate_market_conditions(
 
     rg = rnd.default_rng(seed)
 
-    all_time_series = np.array(
-        Parallel(n_jobs=-1)(
-            delayed_simulate(seed) for seed in rg.integers(0, 2**32, size=R)
-        )
-    )
+    all_time_series = np.array(Parallel(n_jobs=-1)(delayed_simulate(seed) for seed in rg.integers(0, 2**32, size=R)))
 
     return all_time_series
 
@@ -215,14 +211,7 @@ def summarise_market_conditions(all_time_series, maturity):
 
 
 def load_interest_rates(
-    R: int,
-    seed: int,
-    maturity: float,
-    k: float,
-    eta_r: float,
-    m: float,
-    upsilon: float,
-    r_0: float,
+    R: int, seed: int, maturity: float, k: float, eta_r: float, m: float, upsilon: float, r_0: float
 ) -> np.ndarray:
     """Loads previously simulated interest rate time series.
 
@@ -244,9 +233,7 @@ def load_interest_rates(
 
     # Because the interest rate time series is duplicated in many files,
     # we can just pick the first one that matches the given parameters.
-    interest_rate_params_glob = "*".join(
-        ["{}={},".format(k, v) for k, v in args.items()]
-    ).strip(",")
+    interest_rate_params_glob = "*".join(["{}={},".format(k, v) for k, v in args.items()]).strip(",")
     options = list(DATA_DIR.glob(f"mc-*{interest_rate_params_glob}*.npy"))
 
     return np.load(str(options[0]))[:, :, -1]

@@ -21,9 +21,7 @@ def catbond_prices(
     markup: float,
     K: float = 0.0,
     F: float = 100.0,
-    psi_fn: Callable[
-        [np.ndarray, float, float], np.ndarray
-    ] = lambda C_T, K, F: np.minimum(np.maximum(C_T - K, 0), F),
+    psi_fn: Callable[[np.ndarray, float, float], np.ndarray] = lambda C_T, K, F: np.minimum(np.maximum(C_T - K, 0), F),
 ) -> np.ndarray:
     """Calculate catbond prices using Monte Carlo simulation.
 
@@ -55,16 +53,7 @@ def catbond_prices(
 
     prices = np.zeros((len(simulators), len(Ks), len(Fs)))
 
-    interest_rates = load_interest_rates(
-        R,
-        seed,
-        maturity,
-        k,
-        eta_r,
-        m,
-        upsilon,
-        r_0,
-    )
+    interest_rates = load_interest_rates(R, seed, maturity, k, eta_r, m, upsilon, r_0)
 
     int_r_t = integrated_interest_rates(interest_rates, maturity)
 
@@ -72,13 +61,7 @@ def catbond_prices(
 
     for s in range(len(simulators)):
 
-        C_T, _ = simulate_catastrophe_losses(
-            seed + 1,
-            R,
-            simulators[s],
-            mu_C,
-            sigma_C,
-        )
+        C_T, _ = simulate_catastrophe_losses(seed + 1, R, simulators[s], mu_C, sigma_C)
 
         catbond_payouts = F - psi_fn(C_T, K, F)
         discounted_catbond_payouts = np.exp(-int_r_t) * catbond_payouts
@@ -111,9 +94,7 @@ def net_present_value(
     catbond_markup: float,
     K: float = 0.0,
     F: float = 100.0,
-    psi_fn: Callable[
-        [np.ndarray, float, float], np.ndarray
-    ] = lambda C_T, K, F: np.minimum(np.maximum(C_T - K, 0), F),
+    psi_fn: Callable[[np.ndarray, float, float], np.ndarray] = lambda C_T, K, F: np.minimum(np.maximum(C_T - K, 0), F),
 ) -> np.ndarray:
     """The reinsurer's net present value.
 
@@ -222,9 +203,7 @@ def total_hedging_cost(
     F_ins: float = 100.0,
     K_reins: float = 0.0,
     F_reins: float = 100.0,
-    psi_fn: Callable[
-        [np.ndarray, float, float], np.ndarray
-    ] = lambda C_T, K, F: np.minimum(np.maximum(C_T - K, 0), F),
+    psi_fn: Callable[[np.ndarray, float, float], np.ndarray] = lambda C_T, K, F: np.minimum(np.maximum(C_T - K, 0), F),
 ) -> np.ndarray:
     """The insurer's total hedging cost (the sum of the reinsurance price and the catbond price).
 
