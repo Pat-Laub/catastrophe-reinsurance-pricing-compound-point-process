@@ -1,3 +1,4 @@
+import collections
 from typing import Callable, Iterable, Tuple
 
 import numpy as np
@@ -26,7 +27,7 @@ def payout_without_default(C_T: np.ndarray, A: float, M: float) -> np.ndarray:
         if C_T[r] >= M:
             # The reinsurance contract has hit the detachment point.
             payouts[r] = M - A
-        elif M > C_T[r] and C_T[r] >= A:
+        elif M > C_T[r] >= A:
             # The reinsurance contract has not hit detachment point.
             payouts[r] = C_T[r] - A
         else:
@@ -62,11 +63,11 @@ def payout_with_default(V_T: np.ndarray, L_T: np.ndarray, C_T: np.ndarray, A: fl
             # The reinsurance contract has hit the detachment point
             # but the reinsurer does not have enough assets to pay out the full amount.
             payouts[r] = (M - A) * V_T[r] / (L_T[r] + M - A)
-        elif M > C_T[r] and C_T[r] >= A and V_T[r] >= L_T[r] + C_T[r] - A:
+        elif M > C_T[r] >= A and V_T[r] >= L_T[r] + C_T[r] - A:
             # The reinsurance contract has not hit detachment point
             # and the reinsurer has enough assets to pay out.
             payouts[r] = C_T[r] - A
-        elif M > C_T[r] and C_T[r] >= A and V_T[r] < L_T[r] + C_T[r] - A:
+        elif M > C_T[r] >= A and V_T[r] < L_T[r] + C_T[r] - A:
             # The reinsurance contract has not hit detachment point
             # but the reinsurer does not have enough assets to pay out.
             payouts[r] = (C_T[r] - A) * V_T[r] / (L_T[r] + C_T[r] - A)
@@ -113,10 +114,9 @@ def make_iterable(x):
     Returns:
         The variable if it has a length, otherwise a tuple containing the variable.
     """
-    if hasattr(x, "__len__"):
-        return x
-    else:
-        return (x,)
+    if not isinstance(x, collections.abc.Iterable):
+        x = (x,)
+    return x
 
 
 def calculate_prices(
@@ -205,8 +205,8 @@ def reinsurance_prices(
         markup: The markup on the reinsurance contract.
         A: A attachment points to consider.
         M: A reinsurance caps to consider.
-        defaultable: Whether or not the reinsurer can default.
-        catbond: Whether or not the reinsurer has issued a catastrophe bond.
+        defaultable: Whether the reinsurer can default.
+        catbond: Whether the reinsurer has issued a catastrophe bond.
         K: The strike price of the catastrophe bond.
         F: The face value of the catastrophe bond.
         psi_fn: The catastrophe bond trigger function.

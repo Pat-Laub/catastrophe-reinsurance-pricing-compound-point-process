@@ -82,9 +82,6 @@ def simulate_market_conditions(
     x0 = np.array([V_0, L_0, r_0])
     tspan = np.linspace(0.0, maturity, int(maturity * 52))
 
-    # Container for all the simulated market conditions
-    all_time_series = np.empty((R, len(tspan), 3), dtype=float)
-
     # Simulate R realisations of the SDEs.
     def simulate(seed):
         rg = rnd.default_rng(seed)
@@ -141,6 +138,7 @@ def get_market_conditions(
         V_0: The initial value of the reinsurer's assets.
         L_0: The initial value of the reinsurer's liabilities.
         r_0: The initial value of instantaneous interest rate.
+        verbose: Print out status updates.
 
     Returns:
         A numpy array of shape (R, maturity*52, 3) representing the simulated
@@ -207,7 +205,7 @@ def summarise_market_conditions(all_time_series, maturity):
     int_r_t = integrated_interest_rates(all_time_series[:, :, 2], maturity)
 
     # Return the final values and integral
-    return (V_T, L_T, int_r_t)
+    return V_T, L_T, int_r_t
 
 
 def load_interest_rates(

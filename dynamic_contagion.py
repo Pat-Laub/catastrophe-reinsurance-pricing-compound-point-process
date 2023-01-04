@@ -91,15 +91,15 @@ def simulate_num_dynamic_contagion_uniform_jumps(
 
     Args:
         seed: The seed for the random number generator.
-        maxTime: When to stop simulating.
+        max_time: When to stop simulating.
         lambda0: The initial intensity at time t = 0.
         a: The constant mean-reverting level.
         rho: The rate of arrivals for the Poisson external jumps.
         delta: The rate of exponential decay in intensity.
-        selfJumpMin: The minimum jump size for self-arrivals.
-        selfJumpMax: The maximum jump size for self-arrivals.
-        extJumpMin: The minimum jump size for external-arrivals.
-        extJumpMax: The maximum jump size for external-arrivals.
+        self_jump_min: The minimum jump size for self-arrivals.
+        self_jump_max: The maximum jump size for self-arrivals.
+        ext_jump_min: The minimum jump size for external-arrivals.
+        ext_jump_max: The maximum jump size for external-arrivals.
 
     Returns:
         The number of arrivals for a dynamic contagion process.
