@@ -1,8 +1,7 @@
-from typing import Callable, Tuple
+from typing import Callable, Iterable, Tuple
 
 import numpy as np
 import numpy.random as rnd
-import pandas as pd
 from numba import njit  # type: ignore
 
 from market_conditions import get_market_conditions, summarise_market_conditions
@@ -132,8 +131,8 @@ def calculate_prices(
     int_r_t: np.ndarray,
     C_T: np.ndarray,
     markup: float,
-    A: float | Tuple[float, ...] = (10.0, 15.0, 20.0, 25.0, 30.0),
-    M: float | Tuple[float, ...] = (60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0),
+    A: float | Iterable[float] = (10.0, 15.0, 20.0, 25.0, 30.0),
+    M: float | Iterable[float] = (60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0),
 ) -> np.ndarray:
     """Calculate prices for reinsurance contracts at various attachment and cap levels.
 
@@ -174,19 +173,19 @@ def reinsurance_prices(
     phi_L: float,
     sigma_L: float,
     upsilon: float,
-    V_0: float | Tuple[float, ...],
+    V_0: float | Iterable[float],
     L_0: float,
     r_0: float,
-    simulator: Callable[[int], int] | Tuple[Callable[[int], int], ...],
+    simulator: Callable[[int], int] | Iterable[Callable[[int], int]],
     mu_C: float,
     sigma_C: float,
     markup: float,
-    A: float | Tuple[float, ...] = 20.0,
-    M: float | Tuple[float, ...] = 90.0,
+    A: float | Iterable[float] = 20.0,
+    M: float | Iterable[float] = 90.0,
     defaultable: bool = True,
     catbond: bool = False,
-    K: float | Tuple[float, ...] = 40.0,
-    F: float | Tuple[float, ...] = 10.0,
+    K: float | Iterable[float] = 40.0,
+    F: float | Iterable[float] = 10.0,
     psi_fn: Callable[
         [np.ndarray, float, float], np.ndarray
     ] = lambda C_T, K, F: np.minimum(np.maximum(C_T - K, 0), F),

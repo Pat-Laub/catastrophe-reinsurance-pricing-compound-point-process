@@ -1,4 +1,4 @@
-from typing import Callable, Tuple
+from typing import Callable, Iterable
 
 import numpy as np
 
@@ -15,7 +15,7 @@ def catbond_prices(
     m: float,
     upsilon: float,
     r_0: float,
-    simulator: Callable[[int], int] | Tuple[Callable[[int], int], ...],
+    simulator: Callable[[int], int] | Iterable[Callable[[int], int]],
     mu_C: float,
     sigma_C: float,
     markup: float,
@@ -104,7 +104,7 @@ def net_present_value(
     V_0: float,
     L_0: float,
     r_0: float,
-    simulator: Callable[[int], int] | Tuple[Callable[[int], int], ...],
+    simulator: Callable[[int], int] | Iterable[Callable[[int], int]],
     mu_C: float,
     sigma_C: float,
     markup: float,
@@ -213,7 +213,7 @@ def total_hedging_cost(
     V_0: float,
     L_0: float,
     r_0: float,
-    simulator: Callable[[int], int] | Tuple[Callable[[int], int], ...],
+    simulator: Callable[[int], int] | Iterable[Callable[[int], int]],
     mu_C: float,
     sigma_C: float,
     markup: float,

@@ -1,4 +1,4 @@
-from typing import Callable, Type
+from typing import Callable
 
 import numpy as np
 import numpy.random as rnd
@@ -6,14 +6,14 @@ from numba import njit  # type: ignore
 
 
 def simulate_num_dynamic_contagion(
-    rg: Type[np.random.Generator],
+    rg: np.random.Generator,
     max_time: float,
     lambda0: float,
     a: float,
     rho: float,
     delta: float,
-    self_jump_size_dist: Callable[[Type[np.random.Generator]], float],
-    ext_jump_size_dist: Callable[[Type[np.random.Generator]], float],
+    self_jump_size_dist: Callable[[np.random.Generator], float],
+    ext_jump_size_dist: Callable[[np.random.Generator], float],
 ) -> int:
     """Simulate a dynamic contagion process and return the number of arrivals.
 
