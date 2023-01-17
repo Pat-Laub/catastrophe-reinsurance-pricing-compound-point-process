@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.14.2
 #   kernelspec:
-#     display_name: Python [conda env:catbond]
+#     display_name: catbond
 #     language: python
-#     name: conda-env-catbond-py
+#     name: python3
 # ---
 
 # +
@@ -173,8 +173,8 @@ for i in (0, 3):
     # Rotate the plot 40 degrees
     ax.view_init(40, 40)
 
-    ax.set_xlabel("Face value / L_0")
-    ax.set_ylabel("Strike")
+    ax.set_xlabel("Face value / L")
+    ax.set_ylabel("Trigger")
 
     ax.set_title("Poisson" if i == 0 else "DCP")
 
@@ -200,8 +200,8 @@ for i in (1, 2):
     # Rotate the plot 40 degrees
     ax.view_init(40, 40)
 
-    ax.set_xlabel("Face value / L_0")
-    ax.set_ylabel("Strike")
+    ax.set_xlabel("Face value / L")
+    ax.set_ylabel("Trigger")
 
     ax.set_title("Cox" if i == 1 else "Hawkes")
 
@@ -231,7 +231,7 @@ safe_prices = reinsurance_prices(
     markup,
     catbond=True,
     K=40.0,
-    F=10.0,
+    F=25.0,
 )
 
 risky_prices = reinsurance_prices(
@@ -281,7 +281,7 @@ ax[0].spines["right"].set_visible(False)
 
 # On ax[0], replace x axis ticks with "Without catastrophe bond", "With catastrophe bond" at 0 and 1
 ax[0].set_xticks([0, 1])
-ax[0].set_xticklabels(["No catbond", "With catbond"])
+ax[0].set_xticklabels(["No CAT bond", "With CAT bond"])
 
 ax[0].set_ylabel("Reinsurance price")
 
@@ -302,7 +302,7 @@ ax[1].spines["right"].set_visible(False)
 
 # On ax[0], replace x axis ticks with "Without catastrophe bond", "With catastrophe bond" at 0 and 1
 ax[1].set_xticks([0, 1])
-ax[1].set_xticklabels(["No catbond", "With catbond"])
+ax[1].set_xticklabels(["No CAT bond", "With CAT bond"])
 
 ax[1].set_ylabel("Relative prices")
 
@@ -312,7 +312,7 @@ plt.subplots_adjust(wspace=0.35)
 # Increase the font sizes
 plt.rcParams.update({"font.size": 14})
 
-plt.savefig("reinsurance_prices_with_and_without_catbonds.png", dpi=300);
+plt.savefig("reinsurance_prices_with_and_without_catbonds.png", dpi=500,  bbox_inches="tight");
 
 # +
 for i in range(4):
@@ -341,6 +341,8 @@ plt.rcParams.update({"font.size": 14})
 delta_0 = catbond_prices(
     R, seed, maturity, k, eta_r, m, upsilon, r_0, simulate_poisson, mu_C, sigma_C, markup=0.0, K=40.0, F=10.0
 )
+
+
 
 delta_0
 
